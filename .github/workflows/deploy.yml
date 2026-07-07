@@ -28,7 +28,11 @@ jobs:
             git reset --hard origin/main
             
             echo "--- INSTALLING DEPENDENCIES ---"
-            npm install --production || npm install --legacy-peer-deps
+            npm ci || npm install --legacy-peer-deps
+
+            echo "--- PREPARING DATABASE ---"
+            npx prisma generate
+            npx prisma migrate deploy
             
             echo "--- BUILDING APPLICATION ---"
             export NODE_OPTIONS="--max-old-space-size=2048"

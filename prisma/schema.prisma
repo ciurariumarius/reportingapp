@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id                String           @id @default(cuid())
+  name              String
+  slug              String           @unique
+  active            Boolean          @default(true)
+  timezone          String           @default("Europe/Bucharest")
+  currency          String           @default("RON")
+  locale            String           @default("ro")
+  ga4PropertyId     String?          @map("ga4_property_id")
+  metaAdAccountId   String?          @map("meta_ad_account_id")
+  googleAdsSheetUrl String?          @map("google_ads_sheet_url")
+  notes             String?
+  shareTokenHash    String?          @map("share_token_hash")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  monthlyInsights   MonthlyInsight[]
+
+  @@map("clients")
+}
+
+model MonthlyInsight {
+  id                     String   @id @default(cuid())
+  clientId               String   @map("client_id")
+  month                  String
+  whatWentWell           String   @default("") @map("what_went_well")
+  whatNeedsAttention     String   @default("") @map("what_needs_attention")
+  recommendedNextActions String   @default("") @map("recommended_next_actions")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+  client                 Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, month])
+  @@map("monthly_insights")
+}
