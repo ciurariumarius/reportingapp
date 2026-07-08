@@ -15,17 +15,11 @@ import {
 import {
   CalendarDays,
   ChevronDown,
-  CircleDollarSign,
   Clock3,
   Globe2,
   LineChart as LineChartIcon,
-  MousePointerClick,
-  Target,
-  TrendingUp,
-  WalletCards,
-  type LucideIcon
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   getDefaultDateRange,
   getPresetDateRange,
@@ -34,7 +28,6 @@ import {
 } from "@/lib/date-ranges";
 import type {
   AutomatedInsight,
-  MetricTrend,
   ReportResponse,
   SourceState,
   TrendStatus
@@ -75,6 +68,14 @@ const ro = {
   metaConversions: "Conversii Meta",
   totalPlatformConversions: "Conversii platforme total",
   totalCostPerConversion: "Cost / conversie total",
+  platform: "Platformă",
+  cost: "Cost",
+  clicks: "Clickuri",
+  costPerConversion: "Cost / conv.",
+  total: "Total",
+  conversionBreakdown: "Detalii conversii",
+  noConversionBreakdown: "Nu există conversii detaliate pentru această platformă.",
+  allConversionsShort: "toate",
   platformConversions: "Conversii raportate de platforme",
   platformRevenue: "Valoare generată",
   platformValue: "Valoare raportată de platforme",
@@ -156,6 +157,14 @@ const en: typeof ro = {
   metaConversions: "Meta conversions",
   totalPlatformConversions: "Total platform conversions",
   totalCostPerConversion: "Total cost / conversion",
+  platform: "Platform",
+  cost: "Cost",
+  clicks: "Clicks",
+  costPerConversion: "Cost / conv.",
+  total: "Total",
+  conversionBreakdown: "Conversion details",
+  noConversionBreakdown: "No detailed conversions for this platform.",
+  allConversionsShort: "all",
   platformConversions: "Platform-reported conversions",
   platformRevenue: "Generated value",
   platformValue: "Platform-reported value",
@@ -260,18 +269,8 @@ export function ReportDashboard({
 
   const clientName = report?.client.name ?? initialClientName;
   const currency = report?.client.currency ?? "RON";
-  const ownerOverview = report?.ownerOverview;
   const reportType = report?.client.reportType ?? "lead";
   const isEcommerceReport = reportType === "ecommerce";
-  const comparison = report?.comparison;
-  const paidSourceHint = joinSourceLabels(
-    [
-      report?.googleAds ? "Google Ads" : null,
-      report?.meta ? "Meta" : null
-    ],
-    copy.noPaidSources
-  );
-  const ga4SourceHint = report?.ga4 ? "GA4" : copy.noGa4Data;
   const metaLabels =
     locale === "en"
       ? {
@@ -303,7 +302,7 @@ export function ReportDashboard({
       : [])
   ];
   const metaActionColumns: TableColumn[] = [
-    ["action_type", locale === "en" ? "Action type" : "Tip acțiune"],
+    ["action_name", locale === "en" ? "Action" : "Acțiune"],
     ["value", "Valoare"],
     ...(isEcommerceReport
       ? [["action_value", metaLabels.value, "currency"] as TableColumn]
@@ -327,102 +326,6 @@ export function ReportDashboard({
     setPreset("custom");
     setRange(customRange);
   }
-
-  const ownerCards = useMemo(() => {
-    const platformBudgetCards =
-      ownerOverview?.platforms.map((platform) => ({
-        label: platform.key === "googleAds" ? copy.googleAdsCost : copy.metaCost,
-        value: formatCurrency(platform.spend, currency),
-        hint: platform.label,
-        icon: platform.key === "googleAds" ? ("gads" as const) : ("meta" as const)
-      })) ?? [];
-    const platformConversionCards =
-      ownerOverview?.platforms.map((platform) => ({
-        label:
-          platform.key === "googleAds"
-            ? copy.googleAdsConversions
-            : copy.metaConversions,
-        value: formatNumber(platform.conversions),
-        hint: platform.label,
-        icon: Target
-      })) ?? [];
-    const budgetCards = [
-      ...platformBudgetCards,
-      {
-        label: copy.totalMediaCost,
-        value: formatCurrency(ownerOverview?.paid.totalSpend ?? 0, currency),
-        hint: paidSourceHint,
-        trend: comparison?.totalSpend,
-        icon: WalletCards
-      }
-    ];
-    const resultCards = [
-      ...platformConversionCards,
-      {
-        label: copy.totalPlatformConversions,
-        value: formatNumber(ownerOverview?.paid.totalConversions ?? 0),
-        hint: paidSourceHint,
-        trend: comparison?.primaryResults,
-        icon: Target
-      },
-      {
-        label: copy.totalCostPerConversion,
-        value: formatCurrency(ownerOverview?.paid.costPerConversion ?? 0, currency),
-        hint: paidSourceHint,
-        trend: comparison?.costPerResult,
-        icon: CircleDollarSign
-      },
-      {
-        label: copy.websiteTotalTraffic,
-        value: formatNumber(ownerOverview?.website.sessions ?? 0),
-        hint: ga4SourceHint,
-        trend: comparison?.websiteSessions,
-        icon: MousePointerClick
-      },
-      {
-        label: copy.websiteTotalConversions,
-        value: formatNumber(ownerOverview?.website.conversions ?? 0),
-        hint: ga4SourceHint,
-        trend: comparison?.websiteKeyEvents,
-        icon: "ga4" as const
-      },
-      ...(isEcommerceReport
-        ? [
-            {
-              label: copy.websiteRevenue,
-              value: formatCurrency(ownerOverview?.website.revenue ?? 0, currency),
-              hint: ga4SourceHint,
-              trend: comparison?.websiteRevenue,
-              icon: TrendingUp
-            },
-            {
-              label: copy.platformConversionValue,
-              value: formatCurrency(ownerOverview?.paid.conversionValue ?? 0, currency),
-              hint: paidSourceHint,
-              trend: comparison?.platformValue,
-              icon: CircleDollarSign
-            },
-            {
-              label: copy.totalRoas,
-              value: formatNumber(ownerOverview?.paid.roas ?? 0),
-              hint: copy.roasHint,
-              trend: comparison?.roas,
-              icon: TrendingUp
-            }
-          ]
-        : [])
-    ];
-
-    return { budgetCards, resultCards };
-  }, [
-    comparison,
-    copy,
-    currency,
-    ga4SourceHint,
-    isEcommerceReport,
-    ownerOverview,
-    paidSourceHint
-  ]);
 
   return (
     <main className="min-h-screen bg-[#f5f7f7]">
@@ -497,10 +400,8 @@ export function ReportDashboard({
 
         {report ? (
           <OwnerOverviewSection
-            budgetCards={ownerCards.budgetCards}
             copy={copy}
             report={report}
-            resultCards={ownerCards.resultCards}
           />
         ) : null}
 
@@ -874,27 +775,61 @@ function ExecutiveSummary({
   );
 }
 
-type OwnerMetricCard = {
-  icon: MetricIcon;
+type MetricIcon = "gads" | "ga4" | "meta";
+
+type PaidPerformanceRow = {
+  key: "googleAds" | "meta";
   label: string;
-  value: string;
-  hint: string;
-  trend?: MetricTrend;
+  tone: "google" | "meta";
+  spend: number;
+  conversions: number;
+  clicks: number;
+  costPerConversion: number;
+  details: ConversionDetail[];
 };
 
-type MetricIcon = LucideIcon | "gads" | "ga4" | "meta";
+type ConversionDetail = {
+  key: string;
+  label: string;
+  conversions: number;
+  allConversions?: number;
+  value?: number;
+  costPerConversion?: number;
+  actionType?: string;
+};
 
 function OwnerOverviewSection({
-  budgetCards,
   copy,
-  report,
-  resultCards
+  report
 }: {
-  budgetCards: OwnerMetricCard[];
   copy: typeof ro;
   report: ReportResponse;
-  resultCards: OwnerMetricCard[];
 }) {
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const currency = report.client.currency;
+  const platformRows = paidPerformanceRows(report);
+  const paid = report.ownerOverview.paid;
+  const website = report.ownerOverview.website;
+  const isEcommerceReport = report.client.reportType === "ecommerce";
+  const metricItems = [
+    [copy.totalMediaCost, formatCurrency(paid.totalSpend, currency)],
+    [copy.totalPlatformConversions, formatNumber(paid.totalConversions)],
+    [copy.totalCostPerConversion, formatCurrency(paid.costPerConversion, currency)],
+    [copy.websiteTotalTraffic, formatNumber(website.sessions)],
+    [copy.websiteTotalConversions, formatNumber(website.conversions)],
+    ...(isEcommerceReport
+      ? [
+          [copy.websiteRevenue, formatCurrency(website.revenue, currency)],
+          [copy.platformConversionValue, formatCurrency(paid.conversionValue, currency)],
+          [copy.totalRoas, formatNumber(paid.roas)]
+        ]
+      : [])
+  ];
+
+  function toggleRow(key: string) {
+    setExpandedRows((current) => ({ ...current, [key]: !current[key] }));
+  }
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-soft">
       <div className="border-b border-slate-200 px-5 py-4">
@@ -909,45 +844,225 @@ function OwnerOverviewSection({
         </p>
         <p className="mt-1 text-xs text-slate-500">{copy.ownerOverviewHint}</p>
       </div>
-      <div className="grid gap-6 p-5 xl:grid-cols-[0.9fr_1.4fr]">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            {copy.budgetDirection}
-          </h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            {budgetCards.map((card) => (
-              <MetricCard
-                copy={copy}
-                hint={card.hint}
-                icon={card.icon}
-                key={card.label}
-                label={card.label}
-                trend={card.trend}
-                value={card.value}
-              />
-            ))}
+      <div className="p-5">
+        <div className="overflow-hidden rounded-md border border-slate-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">{copy.platform}</th>
+                  <th className="px-4 py-3">{copy.cost}</th>
+                  <th className="px-4 py-3">{copy.conversions}</th>
+                  <th className="px-4 py-3">{copy.clicks}</th>
+                  <th className="px-4 py-3">{copy.costPerConversion}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {platformRows.length ? (
+                  platformRows.map((row) => {
+                    const isExpanded = Boolean(expandedRows[row.key]);
+                    const canExpand = row.details.length > 0;
+
+                    return (
+                      <Fragment key={row.key}>
+                        <tr className="align-middle">
+                          <td className="whitespace-nowrap px-4 py-3">
+                            <button
+                              className="focus-ring flex items-center gap-2 rounded-md text-left font-semibold text-slate-950 disabled:cursor-default disabled:opacity-100"
+                              disabled={!canExpand}
+                              onClick={() => toggleRow(row.key)}
+                              type="button"
+                            >
+                              <ChevronDown
+                                aria-hidden="true"
+                                className={`h-4 w-4 text-slate-400 transition ${
+                                  isExpanded ? "rotate-180" : ""
+                                } ${canExpand ? "" : "opacity-0"}`}
+                              />
+                              <BrandBadge
+                                compact
+                                label={row.key === "googleAds" ? "GAds" : "Meta"}
+                                tone={row.tone}
+                              />
+                              {row.label}
+                            </button>
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-950">
+                            {formatCurrency(row.spend, currency)}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3">
+                            {formatNumber(row.conversions)}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3">
+                            {formatNumber(row.clicks)}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3">
+                            {formatCurrency(row.costPerConversion, currency)}
+                          </td>
+                        </tr>
+                        {isExpanded ? (
+                          <tr>
+                            <td className="bg-slate-50 px-4 py-4" colSpan={5}>
+                              <ConversionDetailsTable
+                                copy={copy}
+                                currency={currency}
+                                details={row.details}
+                              />
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td className="px-4 py-8 text-center text-slate-500" colSpan={5}>
+                      {copy.noPaidSources}
+                    </td>
+                  </tr>
+                )}
+                {platformRows.length ? (
+                  <tr className="bg-slate-50 font-semibold text-slate-950">
+                    <td className="whitespace-nowrap px-4 py-3">{copy.total}</td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      {formatCurrency(paid.totalSpend, currency)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      {formatNumber(paid.totalConversions)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      {formatNumber(paid.totalClicks)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      {formatCurrency(paid.costPerConversion, currency)}
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
           </div>
         </div>
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            {copy.resultsProduced}
-          </h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {resultCards.map((card) => (
-              <MetricCard
-                copy={copy}
-                hint={card.hint}
-                icon={card.icon}
-                key={card.label}
-                label={card.label}
-                trend={card.trend}
-                value={card.value}
-              />
-            ))}
-          </div>
+
+        <div className="mt-5 grid gap-4 border-t border-slate-200 pt-5 sm:grid-cols-2 xl:grid-cols-4">
+          {metricItems.map(([label, value]) => (
+            <div key={label}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {label}
+              </p>
+              <p className="mt-1 text-xl font-semibold text-slate-950">{value}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function paidPerformanceRows(report: ReportResponse): PaidPerformanceRow[] {
+  return report.ownerOverview.platforms.map((platform) => ({
+    key: platform.key,
+    label: platform.label,
+    tone: platform.key === "googleAds" ? "google" : "meta",
+    spend: platform.spend,
+    conversions: platform.conversions,
+    clicks: platform.clicks,
+    costPerConversion: platform.costPerConversion,
+    details:
+      platform.key === "googleAds"
+        ? googleConversionDetails(report)
+        : metaConversionDetails(report)
+  }));
+}
+
+function googleConversionDetails(report: ReportResponse): ConversionDetail[] {
+  return visibleConversionRows(report.googleAds?.conversions ?? []).map((row) => ({
+    key: String(row.conversion_action_name),
+    label: String(row.conversion_action_name ?? "Conversion"),
+    conversions: Number(row.conversions ?? 0),
+    allConversions: Number(row.all_conversions ?? 0),
+    value: Number(row.conversion_value ?? 0)
+  }));
+}
+
+function metaConversionDetails(report: ReportResponse): ConversionDetail[] {
+  return (report.meta?.actions ?? [])
+    .filter((row) => {
+      const value = Number(row.value ?? 0);
+      const isPrimary = row.is_primary === undefined || Number(row.is_primary) > 0;
+
+      return value > 0 && isPrimary;
+    })
+    .map((row) => ({
+      key: String(row.action_type ?? row.action_name),
+      label: String(row.action_name ?? row.action_type ?? "Action"),
+      conversions: Number(row.value ?? 0),
+      value: Number(row.action_value ?? 0),
+      costPerConversion: Number(row.cost_per_action ?? 0),
+      actionType: String(row.action_type ?? "")
+    }));
+}
+
+function ConversionDetailsTable({
+  copy,
+  currency,
+  details
+}: {
+  copy: typeof ro;
+  currency: string;
+  details: ConversionDetail[];
+}) {
+  if (!details.length) {
+    return <p className="text-sm text-slate-500">{copy.noConversionBreakdown}</p>;
+  }
+
+  return (
+    <div>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {copy.conversionBreakdown}
+      </p>
+      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+        <table className="min-w-full divide-y divide-slate-200 text-sm">
+          <thead className="bg-white text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <tr>
+              <th className="px-3 py-2">{copy.conversions}</th>
+              <th className="px-3 py-2">{copy.total}</th>
+              <th className="px-3 py-2">{copy.costPerConversion}</th>
+              <th className="px-3 py-2">{copy.platformValue}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {details.map((detail) => (
+              <tr key={detail.key}>
+                <td className="px-3 py-2">
+                  <div className="font-medium text-slate-950">{detail.label}</div>
+                  {detail.actionType && detail.actionType !== detail.label ? (
+                    <div className="mt-0.5 text-xs text-slate-500">
+                      {detail.actionType}
+                    </div>
+                  ) : null}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2">
+                  {formatNumber(detail.conversions)}
+                  {detail.allConversions && detail.allConversions !== detail.conversions ? (
+                      <span className="ml-2 text-xs text-slate-500">
+                      {copy.allConversionsShort} {formatNumber(detail.allConversions)}
+                    </span>
+                  ) : null}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2">
+                  {detail.costPerConversion !== undefined
+                    ? formatCurrency(detail.costPerConversion, currency)
+                    : "-"}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2">
+                  {detail.value ? formatCurrency(detail.value, currency) : "-"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -1014,46 +1129,6 @@ function SourceSummaryIcon({ sourceKey }: { sourceKey: string }) {
   return <Globe2 aria-hidden="true" className="h-4 w-4 text-digital" />;
 }
 
-function MetricCard({
-  copy,
-  hint,
-  icon,
-  label,
-  trend,
-  value
-}: {
-  copy: typeof ro;
-  hint: string;
-  icon: MetricIcon;
-  label: string;
-  trend?: MetricTrend;
-  value: string;
-}) {
-  const trendText = trend ? formatTrend(trend, copy) : null;
-
-  return (
-    <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-slate-600">{label}</p>
-        <MetricIconView icon={icon} />
-      </div>
-      <p className="mt-3 text-2xl font-semibold text-slate-950">{value}</p>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {trendText ? (
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${insightStatusClass(
-              trend?.status ?? "neutral"
-            )}`}
-          >
-            {trendText}
-          </span>
-        ) : null}
-        <p className="text-xs text-slate-500">{hint}</p>
-      </div>
-    </article>
-  );
-}
-
 function MetricIconView({ icon }: { icon: MetricIcon }) {
   if (icon === "gads") {
     return <BrandBadge label="GAds" tone="google" />;
@@ -1067,12 +1142,7 @@ function MetricIconView({ icon }: { icon: MetricIcon }) {
     return <BrandBadge label="Meta" tone="meta" />;
   }
 
-  const Icon = icon;
-  return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e7f8f6] text-[#0f766e]">
-      <Icon aria-hidden="true" className="h-4 w-4" />
-    </span>
-  );
+  return null;
 }
 
 function BrandBadge({
@@ -1340,11 +1410,6 @@ function formatCurrency(value: number, currency: string) {
   }).format(value);
 }
 
-function joinSourceLabels(sources: Array<string | null>, fallback: string) {
-  const activeSources = sources.filter(Boolean);
-  return activeSources.length ? activeSources.join(" + ") : fallback;
-}
-
 function formatFriendlyDate(value: string, locale: "ro" | "en") {
   const date = new Date(`${value}T00:00:00.000Z`);
   const parts = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", {
@@ -1443,19 +1508,6 @@ function formatDateTime(value: string, locale: "ro" | "en") {
         : part.value
     )
     .join("");
-}
-
-function formatTrend(trend: MetricTrend, copy: typeof ro) {
-  if (trend.percentChange === null) {
-    return trend.previous === 0 && trend.current === 0 ? copy.stable : copy.noComparison;
-  }
-
-  if (trend.direction === "flat") {
-    return copy.stable;
-  }
-
-  const arrow = trend.direction === "up" ? "↑" : "↓";
-  return `${arrow} ${Math.abs(trend.percentChange).toLocaleString("ro-RO")}%`;
 }
 
 function trendStatusLabel(status: TrendStatus, copy: typeof ro) {

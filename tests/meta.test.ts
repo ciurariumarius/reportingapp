@@ -53,6 +53,9 @@ describe("Meta Ads connector", () => {
       )
     ).toBe(true);
     expect(isPrimaryMetaAction("purchase", "lead")).toBe(false);
+    expect(isPrimaryMetaAction("offsite_conversion.custom.123456789", "lead")).toBe(
+      true
+    );
     expect(isPrimaryMetaAction("offsite_conversion.fb_pixel_purchase", "ecommerce")).toBe(
       true
     );
@@ -171,6 +174,96 @@ describe("Meta Ads connector", () => {
       value: 2,
       action_value: 500,
       cost_per_action: 50
+    });
+  });
+
+  it("counts custom conversions as primary Meta conversions", async () => {
+    process.env.META_ACCESS_TOKEN = "token";
+    process.env.META_API_VERSION = "v23.0";
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+
+      if (url.pathname.endsWith("/customconversions")) {
+        return new Response(
+          JSON.stringify({
+            data: [{ id: "123456789", name: "Programare consultanta" }]
+          })
+        );
+      }
+
+      if (url.searchParams.get("time_increment") === "1") {
+        return new Response(
+          JSON.stringify({
+            data: [
+              {
+                date_start: "2026-07-01",
+                spend: "200",
+                reach: "900",
+                impressions: "1200",
+                clicks: "80",
+                inline_link_clicks: "50",
+                actions: [
+                  { action_type: "offsite_conversion.custom.123456789", value: "7" },
+                  { action_type: "post_engagement", value: "20" }
+                ]
+              }
+            ]
+          })
+        );
+      }
+
+      if (url.searchParams.get("level") === "campaign") {
+        return new Response(
+          JSON.stringify({
+            data: [
+              {
+                campaign_id: "cmp_1",
+                campaign_name: "Lead custom",
+                spend: "200",
+                reach: "900",
+                impressions: "1200",
+                inline_link_clicks: "50",
+                actions: [
+                  { action_type: "offsite_conversion.custom.123456789", value: "7" }
+                ]
+              }
+            ]
+          })
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          data: [
+            {
+              spend: "200",
+              actions: [
+                { action_type: "offsite_conversion.custom.123456789", value: "7" },
+                { action_type: "post_engagement", value: "20" }
+              ],
+              cost_per_action_type: [
+                { action_type: "offsite_conversion.custom.123456789", value: "28.57" }
+              ]
+            }
+          ]
+        })
+      );
+    }) as typeof fetch;
+
+    const result = await fetchMetaReport("123", "lead", {
+      startDate: "2026-07-01",
+      endDate: "2026-07-07"
+    });
+
+    expect(result.state.status).toBe("ready");
+    expect(result.report?.kpis.conversions).toBe(7);
+    expect(result.report?.kpis.cpa).toBe(28.57);
+    expect(result.report?.actions[0]).toMatchObject({
+      action_name: "Programare consultanta",
+      action_type: "offsite_conversion.custom.123456789",
+      is_primary: 1,
+      value: 7,
+      cost_per_action: 28.57
     });
   });
 

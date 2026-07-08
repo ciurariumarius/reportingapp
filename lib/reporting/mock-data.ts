@@ -495,13 +495,21 @@ export function metaReport(client: ClientConfig, range: DateRange) {
     };
   });
 
-  const actions = [
-    ["lead", 0.42],
-    ["onsite_conversion.messaging_conversation_started_7d", 0.26],
-    ["link_click", 1],
-    ["post_engagement", 3.4]
-  ].map(([actionType, ratio]) => ({
+  const actionDefinitions: Array<[string, string, number, number]> = [
+    ["lead", "Lead", 0.42, 1],
+    [
+      "onsite_conversion.messaging_conversation_started_7d",
+      "Messaging conversation",
+      0.26,
+      1
+    ],
+    ["link_click", "Link click", 1, 0],
+    ["post_engagement", "Post engagement", 3.4, 0]
+  ];
+  const actions = actionDefinitions.map(([actionType, actionName, ratio, isPrimary]) => ({
+    action_name: actionName,
     action_type: actionType,
+    is_primary: Number(isPrimary),
     value:
       actionType === "link_click"
         ? clicks

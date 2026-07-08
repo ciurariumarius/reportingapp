@@ -41,6 +41,11 @@ type MetaInsightRow = {
   purchase_roas?: MetaActionMetric[];
 };
 
+type MetaCustomConversionRow = {
+  id?: string;
+  name?: string;
+};
+
 type MetaGraphResponse<T> = {
   data?: T[];
   paging?: {
@@ -212,6 +217,10 @@ function calcRoas(value: number, spend: number) {
 export function isPrimaryMetaAction(actionType: string, reportType: ReportType) {
   const type = actionType.toLowerCase();
 
+  if (isCustomConversionAction(type)) {
+    return true;
+  }
+
   if (reportType === "ecommerce") {
     return type.includes("purchase");
   }
@@ -221,6 +230,14 @@ export function isPrimaryMetaAction(actionType: string, reportType: ReportType) 
     type.includes("messaging_conversation") ||
     type.includes("onsite_conversion.messaging") ||
     type.includes("contact")
+  );
+}
+
+function isCustomConversionAction(actionType: string) {
+  return (
+    actionType.includes("custom_conversion") ||
+    /(^|\.)custom(\.|$)/.test(actionType) ||
+    actionType.includes("fb_pixel_custom")
   );
 }
 
@@ -281,7 +298,43 @@ function mapPerformanceRow(row: MetaInsightRow, reportType: ReportType) {
   };
 }
 
-function buildActionRows(rows: MetaInsightRow[], totalSpend: number) {
+function customConversionId(actionType: string) {
+  return (
+    actionType.match(/(?:custom_conversion|custom)[._]?(\d+)/i)?.[1] ??
+    actionType.match(/(\d{6,})$/)?.[1] ??
+    null
+  );
+}
+
+function formatActionName(
+  actionType: string,
+  customConversionNames: Map<string, string>
+) {
+  const customId = customConversionId(actionType);
+
+  if (customId && customConversionNames.has(customId)) {
+    return customConversionNames.get(customId) ?? actionType;
+  }
+
+  if (customId && isCustomConversionAction(actionType.toLowerCase())) {
+    return `Custom conversion ${customId}`;
+  }
+
+  return actionType
+    .replace(/^offsite_conversion\./, "")
+    .replace(/^onsite_conversion\./, "")
+    .replace(/^fb_pixel_/, "")
+    .replace(/[._]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildActionRows(
+  rows: MetaInsightRow[],
+  totalSpend: number,
+  reportType: ReportType,
+  customConversionNames: Map<string, string>
+) {
   const totals = new Map<string, number>();
   const values = new Map<string, number>();
   const costs = new Map<string, number>();
@@ -302,12 +355,17 @@ function buildActionRows(rows: MetaInsightRow[], totalSpend: number) {
 
   return [...totals.entries()]
     .map(([actionType, value]) => ({
+      action_name: formatActionName(actionType, customConversionNames),
       action_type: actionType,
       value: round(value, 2),
+      is_primary: isPrimaryMetaAction(actionType, reportType) ? 1 : 0,
       action_value: round(values.get(actionType) ?? 0),
       cost_per_action: round(costs.get(actionType) ?? calcCpa(totalSpend, value))
     }))
-    .sort((first, second) => Number(second.value) - Number(first.value));
+    .sort((first, second) => {
+      const primaryDelta = Number(second.is_primary) - Number(first.is_primary);
+      return primaryDelta || Number(second.value) - Number(first.value);
+    });
 }
 
 function buildKpis(
@@ -370,6 +428,27 @@ const actionFields = [
   "purchase_roas"
 ].join(",");
 
+async function fetchCustomConversionNames(adAccountId: string, config: MetaConfig) {
+  try {
+    const rows = await fetchMetaGraphPages<MetaCustomConversionRow>(
+      `${adAccountId}/customconversions`,
+      {
+        fields: "id,name",
+        limit: 500
+      },
+      config
+    );
+
+    return new Map(
+      rows
+        .filter((row) => row.id && row.name)
+        .map((row) => [String(row.id), String(row.name)])
+    );
+  } catch {
+    return new Map<string, string>();
+  }
+}
+
 export async function fetchMetaReport(
   metaAdAccountId: string | null,
   reportType: ReportType,
@@ -391,35 +470,37 @@ export async function fetchMetaReport(
   };
 
   try {
-    const [dailyRows, campaignRows, actionRows] = await Promise.all([
-      fetchMetaGraphPages<MetaInsightRow>(
-        `${adAccountId}/insights`,
-        {
-          ...baseParams,
-          fields: insightFields,
-          time_increment: 1
-        },
-        config
-      ),
-      fetchMetaGraphPages<MetaInsightRow>(
-        `${adAccountId}/insights`,
-        {
-          ...baseParams,
-          fields: campaignFields,
-          level: "campaign"
-        },
-        config
-      ),
-      fetchMetaGraphPages<MetaInsightRow>(
-        `${adAccountId}/insights`,
-        {
-          ...baseParams,
-          fields: actionFields,
-          action_breakdowns: "action_type"
-        },
-        config
-      )
-    ]);
+    const [dailyRows, campaignRows, actionRows, customConversionNames] =
+      await Promise.all([
+        fetchMetaGraphPages<MetaInsightRow>(
+          `${adAccountId}/insights`,
+          {
+            ...baseParams,
+            fields: insightFields,
+            time_increment: 1
+          },
+          config
+        ),
+        fetchMetaGraphPages<MetaInsightRow>(
+          `${adAccountId}/insights`,
+          {
+            ...baseParams,
+            fields: campaignFields,
+            level: "campaign"
+          },
+          config
+        ),
+        fetchMetaGraphPages<MetaInsightRow>(
+          `${adAccountId}/insights`,
+          {
+            ...baseParams,
+            fields: actionFields,
+            action_breakdowns: "action_type"
+          },
+          config
+        ),
+        fetchCustomConversionNames(adAccountId, config)
+      ]);
 
     if (!dailyRows.length && !campaignRows.length && !actionRows.length) {
       return { state: emptyState };
@@ -436,7 +517,12 @@ export async function fetchMetaReport(
         kpis: buildKpis(kpiRows, reportType),
         daily,
         campaigns,
-        actions: buildActionRows(actionRows.length ? actionRows : dailyRows, totalSpend)
+        actions: buildActionRows(
+          actionRows.length ? actionRows : dailyRows,
+          totalSpend,
+          reportType,
+          customConversionNames
+        )
       }
     };
   } catch (error) {
