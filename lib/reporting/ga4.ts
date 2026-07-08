@@ -81,7 +81,7 @@ function calcEngagementRate(engagedSessions: number, sessions: number) {
 function safeMessage(error: unknown) {
   if (error instanceof Error && error.message) {
     if (/permission|denied|credentials|auth|unauthenticated/i.test(error.message)) {
-      return "GA4 nu poate fi accesat. Verifica permisiunile service account-ului pe proprietatea GA4.";
+      return "GA4 nu poate fi accesat. Verifică permisiunile service account-ului pe proprietatea GA4.";
     }
 
     if (/not found|property/i.test(error.message)) {
@@ -89,7 +89,7 @@ function safeMessage(error: unknown) {
     }
   }
 
-  return "GA4 nu a putut fi incarcat momentan.";
+  return "GA4 nu a putut fi încărcat momentan.";
 }
 
 export async function fetchGa4Report(

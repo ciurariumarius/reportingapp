@@ -59,7 +59,7 @@ describe("Google Ads Sheet connector", () => {
         "2026-07-01,Mobile,100,1000,50,4,5,25\n",
       gads_locations:
         "date,location,cost,impressions,clicks,conversions,all_conversions,cpa\n" +
-        "2026-07-01,Romania,100,1000,50,4,5,25\n"
+        "2026-07-01,Cluj,100,1000,50,4,5,25\n"
     };
     global.fetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input));
@@ -82,6 +82,113 @@ describe("Google Ads Sheet connector", () => {
     expect(result.report?.campaigns[0].campaign_name).toBe("Search");
     expect(result.report?.conversions[0].conversion_action_name).toBe("Lead form");
     expect(result.report?.devices[0].device).toBe("Mobile");
-    expect(result.report?.locations[0].location).toBe("Romania");
+    expect(result.report?.locations[0].location).toBe("Cluj");
+    expect(result.report?.locations[0].location_name).toBe("Cluj");
+  });
+
+  it("reads new readable Google Ads location fields", async () => {
+    const csvBySheet: Record<string, string> = {
+      gads_daily:
+        "date,cost,impressions,clicks,conversions,all_conversions,conversion_value\n" +
+        "2026-07-01,100,1000,50,4,5,800\n",
+      gads_campaigns:
+        "date,campaign_id,campaign_name,campaign_status,cost,impressions,clicks,conversions,all_conversions,conversion_value\n",
+      gads_conversions:
+        "date,campaign_id,campaign_name,conversion_action_name,conversions,all_conversions,conversion_value,all_conversion_value\n",
+      gads_devices:
+        "date,device,cost,impressions,clicks,conversions,all_conversions,cpa\n",
+      gads_locations:
+        "date,location_id,location_name,location_type,cost,impressions,clicks,conversions,all_conversions,cpa\n" +
+        "2026-07-01,1005640,Suceava,City,75,800,40,3,4,25\n"
+    };
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      const sheet = url.searchParams.get("sheet") ?? "";
+      return new Response(csvBySheet[sheet] ?? "");
+    }) as typeof fetch;
+
+    const result = await fetchGoogleAdsSheetReport(
+      "https://docs.google.com/spreadsheets/d/abc123_DEF-456/edit",
+      {
+        startDate: "2026-07-01",
+        endDate: "2026-07-01"
+      }
+    );
+
+    expect(result.report?.locations[0]).toMatchObject({
+      location: "Suceava",
+      location_id: "1005640",
+      location_name: "Suceava",
+      location_type: "City"
+    });
+  });
+
+  it("filters known country-level legacy location ids", async () => {
+    const csvBySheet: Record<string, string> = {
+      gads_daily:
+        "date,cost,impressions,clicks,conversions,all_conversions,conversion_value\n" +
+        "2026-07-01,100,1000,50,4,5,800\n",
+      gads_campaigns:
+        "date,campaign_id,campaign_name,campaign_status,cost,impressions,clicks,conversions,all_conversions,conversion_value\n",
+      gads_conversions:
+        "date,campaign_id,campaign_name,conversion_action_name,conversions,all_conversions,conversion_value,all_conversion_value\n",
+      gads_devices:
+        "date,device,cost,impressions,clicks,conversions,all_conversions,cpa\n",
+      gads_locations:
+        "date,location,cost,impressions,clicks,conversions,all_conversions,cpa\n" +
+        "2026-07-01,2642,100,1000,50,4,5,25\n"
+    };
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      const sheet = url.searchParams.get("sheet") ?? "";
+      return new Response(csvBySheet[sheet] ?? "");
+    }) as typeof fetch;
+
+    const result = await fetchGoogleAdsSheetReport(
+      "https://docs.google.com/spreadsheets/d/abc123_DEF-456/edit",
+      {
+        startDate: "2026-07-01",
+        endDate: "2026-07-01"
+      }
+    );
+
+    expect(result.report?.locations).toEqual([]);
+  });
+
+  it("keeps a technical fallback for unknown numeric legacy location ids", async () => {
+    const csvBySheet: Record<string, string> = {
+      gads_daily:
+        "date,cost,impressions,clicks,conversions,all_conversions,conversion_value\n" +
+        "2026-07-01,100,1000,50,4,5,800\n",
+      gads_campaigns:
+        "date,campaign_id,campaign_name,campaign_status,cost,impressions,clicks,conversions,all_conversions,conversion_value\n",
+      gads_conversions:
+        "date,campaign_id,campaign_name,conversion_action_name,conversions,all_conversions,conversion_value,all_conversion_value\n",
+      gads_devices:
+        "date,device,cost,impressions,clicks,conversions,all_conversions,cpa\n",
+      gads_locations:
+        "date,location,cost,impressions,clicks,conversions,all_conversions,cpa\n" +
+        "2026-07-01,999999,100,1000,50,4,5,25\n"
+    };
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      const sheet = url.searchParams.get("sheet") ?? "";
+      return new Response(csvBySheet[sheet] ?? "");
+    }) as typeof fetch;
+
+    const result = await fetchGoogleAdsSheetReport(
+      "https://docs.google.com/spreadsheets/d/abc123_DEF-456/edit",
+      {
+        startDate: "2026-07-01",
+        endDate: "2026-07-01"
+      }
+    );
+
+    expect(result.report?.locations[0]).toMatchObject({
+      location: "Location ID 999999",
+      location_id: "999999",
+      location_name: "Location ID 999999",
+      location_type: "ID Google Ads"
+    });
   });
 });

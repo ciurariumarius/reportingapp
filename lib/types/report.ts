@@ -35,6 +35,40 @@ export type SourceSummaryItem = SourceState & {
   label: string;
 };
 
+export type OwnerPlatformOverview = {
+  key: "googleAds" | "meta";
+  label: string;
+  spend: number;
+  clicks: number;
+  conversions: number;
+  costPerConversion: number;
+  conversionValue: number;
+  roas: number;
+};
+
+export type OwnerOverview = {
+  narrative: string;
+  platforms: OwnerPlatformOverview[];
+  paid: {
+    totalSpend: number;
+    totalClicks: number;
+    totalConversions: number;
+    costPerConversion: number;
+    conversionValue: number;
+    roas: number;
+  };
+  website: {
+    sessions: number;
+    conversions: number;
+    revenue: number;
+  };
+  ecommerce?: {
+    websiteRevenue: number;
+    platformValue: number;
+    totalRoas: number;
+  };
+};
+
 export type TrendDirection = "up" | "down" | "flat";
 export type TrendStatus = "good" | "warning" | "neutral";
 
@@ -104,6 +138,7 @@ export type ReportResponse = {
     timezone: string;
     locale: "ro" | "en";
     reportType: ReportType;
+    logoUrl?: string | null;
   };
   dateRange: DateRange;
   displayPeriod: string;
@@ -117,6 +152,7 @@ export type ReportResponse = {
     websiteSessions: number;
     websiteKeyEvents: number;
   };
+  ownerOverview: OwnerOverview;
   comparison?: ReportComparison;
   automatedInsights?: AutomatedInsights;
   sources: {

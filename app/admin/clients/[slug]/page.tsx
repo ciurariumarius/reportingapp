@@ -48,6 +48,8 @@ export default async function EditClientPage({ params }: PageProps) {
           currency: client.currency,
           locale: client.locale === "en" ? "en" : "ro",
           reportType: client.reportType === "ecommerce" ? "ecommerce" : "lead",
+          websiteUrl: client.websiteUrl ?? "",
+          logoUrl: client.logoUrl ?? "",
           ga4PropertyId: client.ga4PropertyId ?? "",
           metaAdAccountId: client.metaAdAccountId ?? "",
           googleAdsSheetUrl: client.googleAdsSheetUrl ?? "",

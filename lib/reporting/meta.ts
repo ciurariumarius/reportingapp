@@ -176,7 +176,7 @@ function safeMessage(error: unknown) {
     }
 
     if (/permission|permissions|access|authorize|capability/.test(message)) {
-      return "Meta Ads nu poate fi accesat. Verifica permisiunile tokenului si accesul la ad account.";
+      return "Meta Ads nu poate fi accesat. Verifică permisiunile tokenului și accesul la ad account.";
     }
 
     if (/unsupported|get request|object|account/.test(message)) {
@@ -184,7 +184,7 @@ function safeMessage(error: unknown) {
     }
   }
 
-  return "Meta Ads nu a putut fi incarcat momentan.";
+  return "Meta Ads nu a putut fi încărcat momentan.";
 }
 
 function number(value: number | string | undefined) {

@@ -39,7 +39,7 @@ export async function requireAdminMutation(request: Request) {
 
   if (!tokenIsValid) {
     return NextResponse.json(
-      { error: "Sesiunea admin nu a putut fi validata. Reincarca pagina si incearca din nou." },
+      { error: "Sesiunea admin nu a putut fi validată. Reîncarcă pagina și încearcă din nou." },
       { status: 403 }
     );
   }

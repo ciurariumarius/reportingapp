@@ -18,6 +18,8 @@ export const clientPayloadSchema = z.object({
   currency: z.string().trim().min(3).max(8).default("RON"),
   locale: z.enum(["ro", "en"]).default("ro"),
   reportType: z.enum(["lead", "ecommerce"]).default("lead"),
+  websiteUrl: z.string().trim().optional().nullable(),
+  logoUrl: z.string().trim().optional().nullable(),
   ga4PropertyId: z.string().trim().optional().nullable(),
   metaAdAccountId: z.string().trim().optional().nullable(),
   googleAdsSheetUrl: z.string().trim().optional().nullable(),

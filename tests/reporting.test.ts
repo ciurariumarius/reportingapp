@@ -9,6 +9,7 @@ const configuredClient = {
   currency: "RON",
   locale: "ro",
   reportType: "lead",
+  logoUrl: null,
   ga4PropertyId: "properties/123",
   metaAdAccountId: "act_123",
   googleAdsSheetUrl: "https://docs.google.com/spreadsheets/d/demo/edit"
@@ -22,7 +23,7 @@ describe("mock report aggregation", () => {
     });
 
     expect(report.sources.googleAds.status).toBe("mock");
-    expect(report.displayPeriod).toBe("01 Iulie 2026 - 07 Iulie 2026");
+    expect(report.displayPeriod).toBe("01 - 07 Iulie 2026");
     expect(report.lastUpdatedAt).toBeTruthy();
     expect(report.sourceSummary.map((source) => source.key)).toEqual([
       "googleAds",
@@ -36,6 +37,15 @@ describe("mock report aggregation", () => {
     expect(report.meta?.actions[0].action_type).toBeTruthy();
     expect(report.overview.websiteSessions).toBe(report.ga4?.kpis.sessions);
     expect(report.overview.platformReportedConversions).toBeGreaterThan(0);
+    expect(report.ownerOverview.platforms.map((platform) => platform.key)).toEqual([
+      "googleAds",
+      "meta"
+    ]);
+    expect(report.ownerOverview.paid.totalSpend).toBe(report.overview.totalSpend);
+    expect(report.ownerOverview.paid.totalConversions).toBe(
+      report.overview.platformReportedConversions
+    );
+    expect(report.ownerOverview.website.conversions).toBe(report.ga4?.kpis.keyEvents);
   });
 
   it("marks missing source configuration without crashing", () => {
@@ -58,6 +68,24 @@ describe("mock report aggregation", () => {
     expect(report.googleAds).toBeUndefined();
     expect(report.ga4).toBeUndefined();
     expect(report.meta).toBeUndefined();
+    expect(report.ownerOverview.platforms).toEqual([]);
+  });
+
+  it("builds ecommerce owner overview with value and ROAS", () => {
+    const report = buildMockReportResponse(
+      {
+        ...configuredClient,
+        reportType: "ecommerce"
+      },
+      {
+        startDate: "2026-07-01",
+        endDate: "2026-07-07"
+      }
+    );
+
+    expect(report.ownerOverview.ecommerce).toBeTruthy();
+    expect(report.ownerOverview.paid.conversionValue).toBeGreaterThan(0);
+    expect(report.ownerOverview.paid.roas).toBeGreaterThan(0);
   });
 
   it("builds comparison and automated insights for the public report contract", async () => {
@@ -78,7 +106,7 @@ describe("mock report aggregation", () => {
       startDate: "2026-06-24",
       endDate: "2026-06-30"
     });
-    expect(report.displayComparisonPeriod).toBe("24 Iunie 2026 - 30 Iunie 2026");
+    expect(report.displayComparisonPeriod).toBe("24 - 30 Iunie 2026");
     expect(report.sources.googleAds.status).toBe("missing_config");
     expect(report.googleAds).toBeUndefined();
     expect(report.automatedInsights?.verdict.message).toBeTruthy();

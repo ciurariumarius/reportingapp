@@ -180,7 +180,9 @@ const TABS = {
     name: "gads_locations",
     headers: [
       "date",
-      "location",
+      "location_id",
+      "location_name",
+      "location_type",
       "cost",
       "impressions",
       "clicks",
@@ -359,7 +361,7 @@ function getLocationRows(dateRange) {
   const query = \`
     SELECT
       segments.date,
-      geographic_view.country_criterion_id,
+      segments.geo_target_region,
       metrics.cost_micros,
       metrics.impressions,
       metrics.clicks,
@@ -370,21 +372,86 @@ function getLocationRows(dateRange) {
     ORDER BY segments.date ASC
   \`;
 
-  return rowsFromSearch(query, (row) => {
+  const performanceRows = rowsFromSearch(query, (row) => {
     const cost = micros(row.metrics.costMicros);
     const conversions = number(row.metrics.conversions);
+    const locationId = idFromResourceName(row.segments.geoTargetRegion);
+
+    if (!locationId) {
+      return null;
+    }
+
+    return {
+      date: row.segments.date,
+      locationId,
+      cost,
+      impressions: number(row.metrics.impressions),
+      clicks: number(row.metrics.clicks),
+      conversions,
+      allConversions: number(row.metrics.allConversions),
+      cpa: safeDivide(cost, conversions)
+    };
+  });
+  const geoTargets = getGeoTargetLookup(
+    performanceRows.map((row) => row.locationId).filter(Boolean)
+  );
+
+  return performanceRows.map((row) => {
+    const geoTarget = geoTargets[row.locationId] || {};
+    const locationType = geoTarget.type || "Region";
+
+    if (String(locationType).toLowerCase() === "country") {
+      return null;
+    }
 
     return [
-      row.segments.date,
-      row.geographicView.countryCriterionId || "Unknown country",
-      cost,
-      number(row.metrics.impressions),
-      number(row.metrics.clicks),
-      conversions,
-      number(row.metrics.allConversions),
-      safeDivide(cost, conversions)
+      row.date,
+      row.locationId,
+      geoTarget.name || \`Location ID \${row.locationId}\`,
+      locationType,
+      row.cost,
+      row.impressions,
+      row.clicks,
+      row.conversions,
+      row.allConversions,
+      row.cpa
     ];
-  });
+  }).filter(Boolean);
+}
+
+function getGeoTargetLookup(locationIds) {
+  const uniqueIds = Array.from(new Set(locationIds)).filter(Boolean);
+  const lookup = {};
+
+  for (let index = 0; index < uniqueIds.length; index += 50) {
+    const chunk = uniqueIds.slice(index, index + 50);
+    const query = \`
+      SELECT
+        geo_target_constant.id,
+        geo_target_constant.name,
+        geo_target_constant.target_type
+      FROM geo_target_constant
+      WHERE geo_target_constant.id IN (\${chunk.join(",")})
+    \`;
+
+    rowsFromSearch(query, (row) => {
+      lookup[String(row.geoTargetConstant.id)] = {
+        name: row.geoTargetConstant.name,
+        type: row.geoTargetConstant.targetType
+      };
+      return null;
+    });
+  }
+
+  return lookup;
+}
+
+function idFromResourceName(resourceName) {
+  if (!resourceName) {
+    return "";
+  }
+
+  return String(resourceName).split("/").pop();
 }
 
 function rowsFromSearch(query, mapper) {
@@ -392,7 +459,11 @@ function rowsFromSearch(query, mapper) {
   const output = [];
 
   while (iterator.hasNext()) {
-    output.push(mapper(iterator.next()));
+    const row = mapper(iterator.next());
+
+    if (row !== null && row !== undefined) {
+      output.push(row);
+    }
   }
 
   return output;

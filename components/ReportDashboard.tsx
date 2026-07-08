@@ -12,6 +12,19 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import {
+  CalendarDays,
+  ChevronDown,
+  CircleDollarSign,
+  Clock3,
+  Globe2,
+  LineChart as LineChartIcon,
+  MousePointerClick,
+  Target,
+  TrendingUp,
+  WalletCards,
+  type LucideIcon
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   getDefaultDateRange,
@@ -34,74 +47,95 @@ type ReportDashboardProps = {
 };
 
 const ro = {
-  report: "Raport de performanta",
-  direction: "Marketing cu directie",
-  performanceSummary: "Directia perioadei",
+  report: "Raport de performanță",
+  direction: "Marketing cu direcție",
+  clarityLine: "Strategie clară. Execuție impecabilă. Rezultate măsurabile.",
+  performanceSummary: "Direcția perioadei",
+  budgetDirection: "Unde s-a dus bugetul",
+  resultsProduced: "Ce rezultate a produs",
+  ownerOverview: "Overview pentru owner",
+  ownerOverviewHint: "Indicatorii principali pentru decizii rapide de business.",
   comparisonPeriod: "Comparat cu",
   verdict: "Verdict",
-  period: "Perioada",
+  period: "Perioadă",
   yesterday: "Ieri",
-  thisWeek: "Saptamana aceasta",
+  thisWeek: "Săptămâna aceasta",
   last7: "Ultimele 7 zile",
   last30: "Ultimele 30 zile",
-  thisMonth: "Luna curenta",
-  previousMonth: "Luna trecuta",
+  thisMonth: "Luna curentă",
+  previousMonth: "Luna trecută",
   custom: "Personalizat",
-  apply: "Aplica",
+  apply: "Aplică",
   totalSpend: "Buget consumat",
+  googleAdsCost: "Cost Google Ads",
+  metaCost: "Cost Meta",
+  totalMediaCost: "Cost total media",
   totalClicks: "Clickuri totale",
+  googleAdsConversions: "Conversii Google Ads",
+  metaConversions: "Conversii Meta",
+  totalPlatformConversions: "Conversii platforme total",
+  totalCostPerConversion: "Cost / conversie total",
   platformConversions: "Conversii raportate de platforme",
-  platformRevenue: "Valoare generata",
-  platformValue: "Valoare raportata de platforme",
-  purchases: "Achizitii",
+  platformRevenue: "Valoare generată",
+  platformValue: "Valoare raportată de platforme",
+  purchases: "Achiziții",
   leads: "Lead-uri",
   costPerLead: "Cost / lead",
-  costPerPurchase: "Cost / achizitie",
+  costPerPurchase: "Cost / achiziție",
   roas: "ROAS",
   roasHint: "Valoare / buget",
   websiteSessions: "Sesiuni pe site",
+  websiteTotalTraffic: "Trafic total site",
   websiteEvents: "Evenimente importante pe site",
+  websiteTotalConversions: "Conversii totale site",
   websiteRevenue: "Venit GA4",
+  platformConversionValue: "Valoare conversii platforme",
+  totalRoas: "ROAS total",
   attribution:
-    "Numerele pot diferi intre Google Ads, GA4 si Meta deoarece fiecare platforma foloseste propriul model de atribuire si propria logica de raportare. Folosim datele din platforme pentru evaluarea canalelor si GA4 pentru comportamentul pe site.",
+    "Numerele pot diferi între Google Ads, GA4 și Meta deoarece fiecare platformă folosește propriul model de atribuire și propria logică de raportare. Folosim datele din platforme pentru evaluarea canalelor și GA4 pentru comportamentul pe site.",
   insights: "Insight-uri automate",
-  wentWell: "Ce s-a imbunatatit",
-  attention: "Ce necesita atentie",
-  nextActions: "Actiuni recomandate",
+  wentWell: "Ce s-a îmbunătățit",
+  attention: "Ce necesită atenție",
+  nextActions: "Acțiuni recomandate",
   googleAds: "Google Ads",
   ga4: "Website / GA4",
   meta: "Meta Ads",
   sourceStatus: "Status surse",
   lastUpdated: "Ultima actualizare",
-  empty: "Nu exista date pentru aceasta sectiune.",
-  noPaidSources: "Fara date Google Ads / Meta",
-  noGa4Data: "Fara date GA4",
-  loading: "Se incarca raportul...",
-  error: "Raportul nu poate fi incarcat.",
-  noComparison: "fara istoric",
+  empty: "Nu există date pentru această secțiune.",
+  noPaidSources: "Fără date Google Ads / Meta",
+  noGa4Data: "Fără date GA4",
+  loading: "Se încarcă raportul...",
+  error: "Raportul nu poate fi încărcat.",
+  noComparison: "fără istoric",
   stable: "stabil",
   kpis: "Indicatori",
-  daily: "Evolutie zilnica",
+  daily: "Evoluție zilnică",
   campaigns: "Campanii",
   conversions: "Conversii",
   devices: "Dispozitive",
-  locations: "Locatii",
+  locations: "Locații",
   channels: "Surse / medium",
   events: "Evenimente",
   landingPages: "Landing pages",
-  actions: "Actiuni",
+  actions: "Acțiuni",
   connected: "Conectat",
   missingConfig: "Neconfigurat",
-  sourceEmpty: "Fara date",
+  sourceEmpty: "Fără date",
   sourceError: "Eroare",
   sourceMock: "Demo",
-  needsAttention: "Necesita atentie"
+  needsAttention: "Necesită atenție"
 };
 
 const en: typeof ro = {
   report: "Performance report",
   direction: "Marketing with direction",
+  clarityLine: "Clear strategy. Sharp execution. Measurable results.",
   performanceSummary: "Period direction",
+  budgetDirection: "Where the budget went",
+  resultsProduced: "What it produced",
+  ownerOverview: "Owner overview",
+  ownerOverviewHint: "The main indicators for fast business decisions.",
   comparisonPeriod: "Compared with",
   verdict: "Verdict",
   period: "Period",
@@ -114,7 +148,14 @@ const en: typeof ro = {
   custom: "Custom",
   apply: "Apply",
   totalSpend: "Spend",
+  googleAdsCost: "Google Ads cost",
+  metaCost: "Meta cost",
+  totalMediaCost: "Total media cost",
   totalClicks: "Total clicks",
+  googleAdsConversions: "Google Ads conversions",
+  metaConversions: "Meta conversions",
+  totalPlatformConversions: "Total platform conversions",
+  totalCostPerConversion: "Total cost / conversion",
   platformConversions: "Platform-reported conversions",
   platformRevenue: "Generated value",
   platformValue: "Platform-reported value",
@@ -125,8 +166,12 @@ const en: typeof ro = {
   roas: "ROAS",
   roasHint: "Value / spend",
   websiteSessions: "Website sessions",
+  websiteTotalTraffic: "Total website traffic",
   websiteEvents: "Website key events",
+  websiteTotalConversions: "Total website conversions",
   websiteRevenue: "GA4 revenue",
+  platformConversionValue: "Platform conversion value",
+  totalRoas: "Total ROAS",
   attribution:
     "Numbers may differ between Google Ads, GA4, and Meta because each platform uses its own attribution model and reporting logic. We use platform data to evaluate each channel and GA4 to understand website behavior.",
   insights: "Automated insights",
@@ -215,14 +260,10 @@ export function ReportDashboard({
 
   const clientName = report?.client.name ?? initialClientName;
   const currency = report?.client.currency ?? "RON";
-  const overview = report?.overview;
+  const ownerOverview = report?.ownerOverview;
   const reportType = report?.client.reportType ?? "lead";
   const isEcommerceReport = reportType === "ecommerce";
   const comparison = report?.comparison;
-  const platformValue =
-    (report?.googleAds?.kpis.conversionValue ?? 0) +
-    (report?.meta?.kpis.conversionValue ?? 0);
-  const websiteRevenue = report?.ga4?.kpis.revenue ?? 0;
   const paidSourceHint = joinSourceLabels(
     [
       report?.googleAds ? "Google Ads" : null,
@@ -231,10 +272,6 @@ export function ReportDashboard({
     copy.noPaidSources
   );
   const ga4SourceHint = report?.ga4 ? "GA4" : copy.noGa4Data;
-  const ecommerceRoas =
-    overview?.totalSpend && platformValue
-      ? platformValue / overview.totalSpend
-      : 0;
   const metaLabels =
     locale === "en"
       ? {
@@ -245,49 +282,33 @@ export function ReportDashboard({
           value: "Purchase value"
         }
       : {
-          impressions: "Afisari",
+          impressions: "Afișări",
           linkClicks: "Clickuri link",
-          primary: isEcommerceReport ? "Achizitii" : "Leads",
-          cost: isEcommerceReport ? "Cost / achizitie" : "Cost / lead",
-          value: "Valoare achizitii"
+          primary: isEcommerceReport ? "Achiziții" : "Leads",
+          cost: isEcommerceReport ? "Cost / achiziție" : "Cost / lead",
+          value: "Valoare achiziții"
   };
-  const metaKpiItems: Array<[string, number | undefined, ("currency" | "percent")?]> = [
-    [copy.totalSpend, report?.meta?.kpis.spend, "currency"],
-    [locale === "en" ? "Reach" : "Acoperire", report?.meta?.kpis.reach],
-    [metaLabels.impressions, report?.meta?.kpis.impressions],
-    [metaLabels.linkClicks, report?.meta?.kpis.clicks],
-    [metaLabels.primary, report?.meta?.kpis.conversions],
-    [metaLabels.cost, report?.meta?.kpis.cpa, "currency"],
-    ...(isEcommerceReport
-      ? [
-          [metaLabels.value, report?.meta?.kpis.conversionValue, "currency"] as [
-            string,
-            number | undefined,
-            "currency"
-          ],
-          ["ROAS", report?.meta?.kpis.roas] as [string, number | undefined]
-        ]
-      : [])
-  ];
-  const metaCampaignColumns: Array<[string, string]> = [
+  const metaCampaignColumns: TableColumn[] = [
     ["campaign_name", "Campanie"],
-    ["spend", copy.totalSpend],
+    ["spend", copy.totalSpend, "currency"],
     ["reach", locale === "en" ? "Reach" : "Acoperire"],
     ["link_clicks", metaLabels.linkClicks],
     ["leads", metaLabels.primary],
-    ["cost_per_lead", metaLabels.cost],
+    ["cost_per_lead", metaLabels.cost, "currency"],
     ...(isEcommerceReport
       ? [
-          ["conversion_value", metaLabels.value] as [string, string],
+          ["conversion_value", metaLabels.value, "currency"] as TableColumn,
           ["roas", "ROAS"] as [string, string]
         ]
       : [])
   ];
-  const metaActionColumns: Array<[string, string]> = [
-    ["action_type", locale === "en" ? "Action type" : "Tip actiune"],
+  const metaActionColumns: TableColumn[] = [
+    ["action_type", locale === "en" ? "Action type" : "Tip acțiune"],
     ["value", "Valoare"],
-    ...(isEcommerceReport ? [["action_value", metaLabels.value] as [string, string]] : []),
-    ["cost_per_action", "Cost / actiune"]
+    ...(isEcommerceReport
+      ? [["action_value", metaLabels.value, "currency"] as TableColumn]
+      : []),
+    ["cost_per_action", "Cost / acțiune", "currency"]
   ];
 
   function choosePreset(nextPreset: DatePreset) {
@@ -307,97 +328,112 @@ export function ReportDashboard({
     setRange(customRange);
   }
 
-  const overviewCards = useMemo(
-    () =>
-      isEcommerceReport
+  const ownerCards = useMemo(() => {
+    const platformBudgetCards =
+      ownerOverview?.platforms.map((platform) => ({
+        label: platform.key === "googleAds" ? copy.googleAdsCost : copy.metaCost,
+        value: formatCurrency(platform.spend, currency),
+        hint: platform.label,
+        icon: platform.key === "googleAds" ? ("gads" as const) : ("meta" as const)
+      })) ?? [];
+    const platformConversionCards =
+      ownerOverview?.platforms.map((platform) => ({
+        label:
+          platform.key === "googleAds"
+            ? copy.googleAdsConversions
+            : copy.metaConversions,
+        value: formatNumber(platform.conversions),
+        hint: platform.label,
+        icon: Target
+      })) ?? [];
+    const budgetCards = [
+      ...platformBudgetCards,
+      {
+        label: copy.totalMediaCost,
+        value: formatCurrency(ownerOverview?.paid.totalSpend ?? 0, currency),
+        hint: paidSourceHint,
+        trend: comparison?.totalSpend,
+        icon: WalletCards
+      }
+    ];
+    const resultCards = [
+      ...platformConversionCards,
+      {
+        label: copy.totalPlatformConversions,
+        value: formatNumber(ownerOverview?.paid.totalConversions ?? 0),
+        hint: paidSourceHint,
+        trend: comparison?.primaryResults,
+        icon: Target
+      },
+      {
+        label: copy.totalCostPerConversion,
+        value: formatCurrency(ownerOverview?.paid.costPerConversion ?? 0, currency),
+        hint: paidSourceHint,
+        trend: comparison?.costPerResult,
+        icon: CircleDollarSign
+      },
+      {
+        label: copy.websiteTotalTraffic,
+        value: formatNumber(ownerOverview?.website.sessions ?? 0),
+        hint: ga4SourceHint,
+        trend: comparison?.websiteSessions,
+        icon: MousePointerClick
+      },
+      {
+        label: copy.websiteTotalConversions,
+        value: formatNumber(ownerOverview?.website.conversions ?? 0),
+        hint: ga4SourceHint,
+        trend: comparison?.websiteKeyEvents,
+        icon: "ga4" as const
+      },
+      ...(isEcommerceReport
         ? [
             {
-              label: copy.totalSpend,
-              value: formatCurrency(overview?.totalSpend ?? 0, currency),
-              hint: paidSourceHint,
-              trend: comparison?.totalSpend
-            },
-            {
-              label: copy.platformValue,
-              value: formatCurrency(platformValue, currency),
-              hint: paidSourceHint,
-              trend: comparison?.platformValue
-            },
-            {
-              label: copy.purchases,
-              value: formatNumber(overview?.platformReportedConversions ?? 0),
-              hint: paidSourceHint,
-              trend: comparison?.primaryResults
-            },
-            {
-              label: copy.roas,
-              value: formatNumber(ecommerceRoas),
-              hint: copy.roasHint,
-              trend: comparison?.roas
-            },
-            {
-              label: copy.websiteSessions,
-              value: formatNumber(overview?.websiteSessions ?? 0),
-              hint: ga4SourceHint,
-              trend: comparison?.websiteSessions
-            },
-            {
               label: copy.websiteRevenue,
-              value: formatCurrency(websiteRevenue, currency),
+              value: formatCurrency(ownerOverview?.website.revenue ?? 0, currency),
               hint: ga4SourceHint,
-              trend: comparison?.websiteRevenue
+              trend: comparison?.websiteRevenue,
+              icon: TrendingUp
+            },
+            {
+              label: copy.platformConversionValue,
+              value: formatCurrency(ownerOverview?.paid.conversionValue ?? 0, currency),
+              hint: paidSourceHint,
+              trend: comparison?.platformValue,
+              icon: CircleDollarSign
+            },
+            {
+              label: copy.totalRoas,
+              value: formatNumber(ownerOverview?.paid.roas ?? 0),
+              hint: copy.roasHint,
+              trend: comparison?.roas,
+              icon: TrendingUp
             }
           ]
-        : [
-            {
-              label: copy.totalSpend,
-              value: formatCurrency(overview?.totalSpend ?? 0, currency),
-              hint: paidSourceHint,
-              trend: comparison?.totalSpend
-            },
-            {
-              label: copy.leads,
-              value: formatNumber(overview?.platformReportedConversions ?? 0),
-              hint: paidSourceHint,
-              trend: comparison?.primaryResults
-            },
-            {
-              label: copy.costPerLead,
-              value: formatCurrency(comparison?.costPerResult.current ?? 0, currency),
-              hint: paidSourceHint,
-              trend: comparison?.costPerResult
-            },
-            {
-              label: copy.websiteSessions,
-              value: formatNumber(overview?.websiteSessions ?? 0),
-              hint: ga4SourceHint,
-              trend: comparison?.websiteSessions
-            },
-            {
-              label: copy.websiteEvents,
-              value: formatNumber(overview?.websiteKeyEvents ?? 0),
-              hint: ga4SourceHint,
-              trend: comparison?.websiteKeyEvents
-            }
-          ],
-    [
-      comparison,
-      copy,
-      currency,
-      ecommerceRoas,
-      ga4SourceHint,
-      isEcommerceReport,
-      overview,
-      paidSourceHint,
-      platformValue,
-      websiteRevenue
-    ]
-  );
+        : [])
+    ];
+
+    return { budgetCards, resultCards };
+  }, [
+    comparison,
+    copy,
+    currency,
+    ga4SourceHint,
+    isEcommerceReport,
+    ownerOverview,
+    paidSourceHint
+  ]);
 
   return (
     <main className="min-h-screen bg-[#f5f7f7]">
       <header className="relative overflow-hidden bg-[#071111] text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(54,180,167,0.22),transparent_32%),linear-gradient(135deg,rgba(28,67,94,0.55),transparent_48%)]" />
+        <img
+          alt=""
+          aria-hidden="true"
+          className="absolute right-0 top-0 hidden h-full w-1/2 object-cover opacity-25 mix-blend-screen lg:block"
+          src="/branding/chess-hero-wide.png"
+        />
         <div className="relative mx-auto max-w-7xl px-5 py-6">
           <img
             alt="DigitalDot"
@@ -409,11 +445,25 @@ export function ReportDashboard({
               <p className="text-sm font-semibold uppercase tracking-wide text-[#8fd8ce]">
                 {copy.direction}
               </p>
-              <h1 className="mt-3 text-4xl font-semibold leading-tight text-white md:text-5xl">
-                {clientName}
-              </h1>
+              <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
+                {report?.client.logoUrl ? (
+                  <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white p-3 shadow-soft">
+                    <img
+                      alt={`Logo ${clientName}`}
+                      className="max-h-full max-w-full object-contain"
+                      src={report.client.logoUrl}
+                    />
+                  </div>
+                ) : null}
+                <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
+                  {clientName}
+                </h1>
+              </div>
               <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300">
                 {copy.report}
+              </p>
+              <p className="mt-4 max-w-2xl text-sm font-medium text-[#e5d5b8]">
+                {copy.clarityLine}
               </p>
             </div>
             <DateRangeControls
@@ -445,53 +495,25 @@ export function ReportDashboard({
           <ExecutiveSummary copy={copy} report={report} />
         ) : null}
 
-        <section
-          className={`grid gap-4 md:grid-cols-2 ${
-            isEcommerceReport ? "xl:grid-cols-6" : "xl:grid-cols-5"
-          }`}
-        >
-          {overviewCards.map((card) => (
-            <MetricCard
-              hint={card.hint}
-              key={card.label}
-              label={card.label}
-              trend={card.trend}
-              value={card.value}
-              copy={copy}
-            />
-          ))}
-        </section>
+        {report ? (
+          <OwnerOverviewSection
+            budgetCards={ownerCards.budgetCards}
+            copy={copy}
+            report={report}
+            resultCards={ownerCards.resultCards}
+          />
+        ) : null}
 
         <InsightsSection copy={copy} report={report} />
-
-        <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600 shadow-soft">
-          {copy.attribution}
-        </p>
-
-        {report ? <SourceStatusSection copy={copy} report={report} /> : null}
 
         {report?.googleAds ? (
           <PlatformSection
             copy={copy}
+            sourceKey="googleAds"
             status={report.sources.googleAds}
             title={copy.googleAds}
           >
             <>
-              <KpiStrip
-                currency={currency}
-                items={[
-                  [copy.totalSpend, report.googleAds.kpis.spend, "currency"],
-                  ["Clickuri", report.googleAds.kpis.clicks],
-                  ["CTR", report.googleAds.kpis.ctr, "percent"],
-                  ["Conversii", report.googleAds.kpis.conversions],
-                  [
-                    isEcommerceReport ? copy.costPerPurchase : copy.costPerLead,
-                    report.googleAds.kpis.cpa,
-                    "currency"
-                  ],
-                  ["ROAS", report.googleAds.kpis.roas]
-                ]}
-              />
               <ChartBlock title={copy.daily}>
                 <ResponsiveContainer height={280} width="100%">
                   <LineChart data={report.googleAds.daily}>
@@ -517,49 +539,61 @@ export function ReportDashboard({
                 </ResponsiveContainer>
               </ChartBlock>
               <DataGrid
+                currency={currency}
                 blocks={[
                   {
                     title: copy.campaigns,
                     rows: report.googleAds.campaigns,
                     columns: [
                       ["campaign_name", "Campanie"],
-                      ["cost", copy.totalSpend],
-                      ["clicks", "Clickuri"],
+                      ["cost", copy.totalSpend, "currency"],
                       ["conversions", "Conversii"],
-                      ["cpa", isEcommerceReport ? copy.costPerPurchase : copy.costPerLead],
-                      ["roas", "ROAS"]
+                      [
+                        "cpa",
+                        isEcommerceReport ? copy.costPerPurchase : copy.costPerLead,
+                        "currency"
+                      ],
+                      ["clicks", "Clickuri"],
+                      ...(isEcommerceReport
+                        ? [
+                            [
+                              "conversion_value",
+                              copy.platformConversionValue,
+                              "currency"
+                            ] as [
+                              string,
+                              string,
+                              "currency"
+                            ],
+                            ["roas", "ROAS"] as [string, string]
+                          ]
+                        : [])
                     ]
                   },
                   {
                     title: copy.conversions,
-                    rows: report.googleAds.conversions,
+                    rows: visibleConversionRows(report.googleAds.conversions),
                     columns: [
-                      ["conversion_action_name", "Actiune"],
+                      ["conversion_action_name", "Acțiune"],
                       ["conversions", "Conversii"],
                       ["all_conversions", "Toate conversiile"],
-                      ["conversion_value", "Valoare"]
-                    ]
-                  },
-                  {
-                    title: copy.devices,
-                    rows: report.googleAds.devices,
-                    columns: [
-                      ["device", "Dispozitiv"],
-                      ["cost", copy.totalSpend],
-                      ["clicks", "Clickuri"],
-                      ["conversions", "Conversii"],
-                      ["cpa", isEcommerceReport ? copy.costPerPurchase : copy.costPerLead]
+                      ["conversion_value", "Valoare", "currency"]
                     ]
                   },
                   {
                     title: copy.locations,
-                    rows: report.googleAds.locations,
+                    rows: visibleLocationRows(report.googleAds.locations),
                     columns: [
-                      ["location", "Locatie"],
-                      ["cost", copy.totalSpend],
+                      ["location_name", "Locație"],
+                      ["location_type", "Tip"],
+                      ["cost", copy.totalSpend, "currency"],
                       ["clicks", "Clickuri"],
                       ["conversions", "Conversii"],
-                      ["cpa", isEcommerceReport ? copy.costPerPurchase : copy.costPerLead]
+                      [
+                        "cpa",
+                        isEcommerceReport ? copy.costPerPurchase : copy.costPerLead,
+                        "currency"
+                      ]
                     ]
                   }
                 ]}
@@ -569,19 +603,13 @@ export function ReportDashboard({
         ) : null}
 
         {report?.ga4 ? (
-          <PlatformSection copy={copy} status={report.sources.ga4} title={copy.ga4}>
+          <PlatformSection
+            copy={copy}
+            sourceKey="ga4"
+            status={report.sources.ga4}
+            title={copy.ga4}
+          >
             <>
-              <KpiStrip
-                currency={currency}
-                items={[
-                  ["Utilizatori", report.ga4.kpis.users],
-                  ["Sesiuni", report.ga4.kpis.sessions],
-                  ["Sesiuni engaged", report.ga4.kpis.engagedSessions],
-                  ["Rata engagement", report.ga4.kpis.engagementRate, "percent"],
-                  ["Evenimente cheie", report.ga4.kpis.keyEvents],
-                  ["Venit", report.ga4.kpis.revenue, "currency"]
-                ]}
-              />
               <ChartBlock title={copy.daily}>
                 <ResponsiveContainer height={280} width="100%">
                   <BarChart data={report.ga4.daily}>
@@ -597,11 +625,16 @@ export function ReportDashboard({
                     />
                     <Legend />
                     <Bar dataKey="sessions" fill="#1c435e" name="Sesiuni" />
-                    <Bar dataKey="key_events" fill="#0f766e" name="Evenimente" />
+                    <Bar
+                      dataKey="key_events"
+                      fill="#0f766e"
+                      name="Conversii website"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartBlock>
               <DataGrid
+                currency={currency}
                 blocks={[
                   {
                     title: copy.channels,
@@ -609,8 +642,8 @@ export function ReportDashboard({
                     columns: [
                       ["source_medium", "Sursa / medium"],
                       ["sessions", "Sesiuni"],
-                      ["key_events", "Evenimente"],
-                      ["revenue", "Venit"]
+                      ["key_events", "Conversii website"],
+                      ["revenue", "Venit", "currency"]
                     ]
                   },
                   {
@@ -619,17 +652,16 @@ export function ReportDashboard({
                     columns: [
                       ["landing_page", "Pagina"],
                       ["sessions", "Sesiuni"],
-                      ["key_events", "Evenimente"],
+                      ["key_events", "Conversii website"],
                       ["engagement_rate", "Engagement"]
                     ]
                   },
                   {
-                    title: copy.events,
-                    rows: report.ga4.events,
+                    title: "Conversii website",
+                    rows: visibleGa4KeyEventRows(report.ga4.events),
                     columns: [
-                      ["event_name", "Eveniment"],
-                      ["event_count", "Total"],
-                      ["key_events", "Evenimente cheie"]
+                      ["event_name", "Conversie"],
+                      ["key_events", "Total conversii"]
                     ]
                   }
                 ]}
@@ -639,12 +671,13 @@ export function ReportDashboard({
         ) : null}
 
         {report?.meta ? (
-          <PlatformSection copy={copy} status={report.sources.meta} title={copy.meta}>
+          <PlatformSection
+            copy={copy}
+            sourceKey="meta"
+            status={report.sources.meta}
+            title={copy.meta}
+          >
             <>
-              <KpiStrip
-                currency={currency}
-                items={metaKpiItems}
-              />
               <ChartBlock title={copy.daily}>
                 <ResponsiveContainer height={280} width="100%">
                   <LineChart data={report.meta.daily}>
@@ -666,6 +699,7 @@ export function ReportDashboard({
                 </ResponsiveContainer>
               </ChartBlock>
               <DataGrid
+                currency={currency}
                 blocks={[
                   {
                     title: copy.campaigns,
@@ -682,6 +716,14 @@ export function ReportDashboard({
             </>
           </PlatformSection>
         ) : null}
+
+        {report ? (
+          <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600 shadow-soft">
+            {copy.attribution}
+          </p>
+        ) : null}
+
+        {report ? <SourceStatusSection copy={copy} report={report} /> : null}
       </div>
     </main>
   );
@@ -713,25 +755,31 @@ function DateRangeControls({
   ];
 
   return (
-    <div className="w-full max-w-2xl rounded-lg border border-white/15 bg-white/[0.08] p-3 backdrop-blur">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
+    <div className="w-full max-w-md rounded-lg border border-white/15 bg-white/[0.08] p-3 backdrop-blur">
+      <label
+        className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-300"
+        htmlFor="report-period"
+      >
+        <CalendarDays aria-hidden="true" className="h-4 w-4 text-[#8fd8ce]" />
         {copy.period}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {presets.map(([key, label]) => (
-          <button
-            className={
-              key === preset
-                ? "focus-ring rounded-md bg-[#8fd8ce] px-3 py-2 text-sm font-semibold text-[#071111]"
-                : "focus-ring rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:border-[#8fd8ce]"
-            }
-            key={key}
-            onClick={() => onPreset(key)}
-            type="button"
-          >
-            {label}
-          </button>
-        ))}
+      </label>
+      <div className="relative">
+        <select
+          className="focus-ring w-full appearance-none rounded-md border border-white/20 bg-white/10 px-3 py-2.5 pr-10 text-sm font-semibold text-white outline-none hover:border-[#8fd8ce]"
+          id="report-period"
+          onChange={(event) => onPreset(event.target.value as DatePreset)}
+          value={preset}
+        >
+          {presets.map(([key, label]) => (
+            <option className="bg-[#071111] text-white" key={key} value={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden="true"
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8fd8ce]"
+        />
       </div>
       {preset === "custom" ? (
         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
@@ -788,19 +836,29 @@ function ExecutiveSummary({
           </p>
         </div>
         <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          <p>
-            <span className="font-semibold text-slate-950">{copy.period}: </span>
-            {report.displayPeriod}
-          </p>
-          {report.comparisonRange ? (
-            <p className="mt-1">
-              <span className="font-semibold text-slate-950">
-                {copy.comparisonPeriod}:{" "}
-              </span>
-              {report.displayComparisonPeriod ??
-                formatRange(report.comparisonRange, report.client.locale)}
-            </p>
-          ) : null}
+          <div className="flex gap-3">
+            <CalendarDays
+              aria-hidden="true"
+              className="mt-0.5 h-4 w-4 shrink-0 text-digital"
+            />
+            <div>
+              <p>
+                <span className="font-semibold text-slate-950">
+                  {copy.period}:{" "}
+                </span>
+                {report.displayPeriod}
+              </p>
+              {report.comparisonRange ? (
+                <p className="mt-1">
+                  <span className="font-semibold text-slate-950">
+                    {copy.comparisonPeriod}:{" "}
+                  </span>
+                  {report.displayComparisonPeriod ??
+                    formatRange(report.comparisonRange, report.client.locale)}
+                </p>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
       {verdict ? (
@@ -812,6 +870,83 @@ function ExecutiveSummary({
           {trendStatusLabel(verdict.status, copy)}
         </span>
       ) : null}
+    </section>
+  );
+}
+
+type OwnerMetricCard = {
+  icon: MetricIcon;
+  label: string;
+  value: string;
+  hint: string;
+  trend?: MetricTrend;
+};
+
+type MetricIcon = LucideIcon | "gads" | "ga4" | "meta";
+
+function OwnerOverviewSection({
+  budgetCards,
+  copy,
+  report,
+  resultCards
+}: {
+  budgetCards: OwnerMetricCard[];
+  copy: typeof ro;
+  report: ReportResponse;
+  resultCards: OwnerMetricCard[];
+}) {
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white shadow-soft">
+      <div className="border-b border-slate-200 px-5 py-4">
+        <p className="text-sm font-semibold uppercase tracking-wide text-digital">
+          {copy.ownerOverview}
+        </p>
+        <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+          {copy.resultsProduced}
+        </h2>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">
+          {report.ownerOverview.narrative}
+        </p>
+        <p className="mt-1 text-xs text-slate-500">{copy.ownerOverviewHint}</p>
+      </div>
+      <div className="grid gap-6 p-5 xl:grid-cols-[0.9fr_1.4fr]">
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            {copy.budgetDirection}
+          </h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            {budgetCards.map((card) => (
+              <MetricCard
+                copy={copy}
+                hint={card.hint}
+                icon={card.icon}
+                key={card.label}
+                label={card.label}
+                trend={card.trend}
+                value={card.value}
+              />
+            ))}
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            {copy.resultsProduced}
+          </h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {resultCards.map((card) => (
+              <MetricCard
+                copy={copy}
+                hint={card.hint}
+                icon={card.icon}
+                key={card.label}
+                label={card.label}
+                trend={card.trend}
+                value={card.value}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -830,7 +965,8 @@ function SourceStatusSection({
           <h2 className="text-lg font-semibold text-slate-950">
             {copy.sourceStatus}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+            <Clock3 aria-hidden="true" className="h-4 w-4 text-digital" />
             {copy.lastUpdated}: {formatDateTime(report.lastUpdatedAt, report.client.locale)}
           </p>
         </div>
@@ -842,7 +978,10 @@ function SourceStatusSection({
             key={source.key}
           >
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-slate-950">{source.label}</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+                <SourceSummaryIcon sourceKey={source.key} />
+                {source.label}
+              </p>
               <span
                 className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
                   statusClass[source.status]
@@ -859,15 +998,33 @@ function SourceStatusSection({
   );
 }
 
+function SourceSummaryIcon({ sourceKey }: { sourceKey: string }) {
+  if (sourceKey === "googleAds") {
+    return <BrandBadge compact label="GAds" tone="google" />;
+  }
+
+  if (sourceKey === "ga4") {
+    return <BrandBadge compact label="GA4" tone="analytics" />;
+  }
+
+  if (sourceKey === "meta") {
+    return <BrandBadge compact label="Meta" tone="meta" />;
+  }
+
+  return <Globe2 aria-hidden="true" className="h-4 w-4 text-digital" />;
+}
+
 function MetricCard({
   copy,
   hint,
+  icon,
   label,
   trend,
   value
 }: {
   copy: typeof ro;
   hint: string;
+  icon: MetricIcon;
   label: string;
   trend?: MetricTrend;
   value: string;
@@ -876,8 +1033,11 @@ function MetricCard({
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
-      <p className="text-sm font-medium text-slate-600">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-medium text-slate-600">{label}</p>
+        <MetricIconView icon={icon} />
+      </div>
+      <p className="mt-3 text-2xl font-semibold text-slate-950">{value}</p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {trendText ? (
           <span
@@ -891,6 +1051,56 @@ function MetricCard({
         <p className="text-xs text-slate-500">{hint}</p>
       </div>
     </article>
+  );
+}
+
+function MetricIconView({ icon }: { icon: MetricIcon }) {
+  if (icon === "gads") {
+    return <BrandBadge label="GAds" tone="google" />;
+  }
+
+  if (icon === "ga4") {
+    return <BrandBadge label="GA4" tone="analytics" />;
+  }
+
+  if (icon === "meta") {
+    return <BrandBadge label="Meta" tone="meta" />;
+  }
+
+  const Icon = icon;
+  return (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e7f8f6] text-[#0f766e]">
+      <Icon aria-hidden="true" className="h-4 w-4" />
+    </span>
+  );
+}
+
+function BrandBadge({
+  compact = false,
+  label,
+  tone
+}: {
+  compact?: boolean;
+  label: string;
+  tone: "google" | "analytics" | "meta";
+}) {
+  const toneClass =
+    tone === "meta"
+      ? "bg-blue-50 text-blue-700"
+      : tone === "analytics"
+        ? "bg-amber-50 text-amber-700"
+        : "bg-emerald-50 text-emerald-700";
+
+  return (
+    <span
+      className={`flex shrink-0 items-center justify-center rounded-full font-bold ${toneClass} ${
+        compact
+          ? "h-6 min-w-6 px-1.5 text-[9px]"
+          : "h-9 min-w-9 px-2 text-[11px]"
+      }`}
+    >
+      {label}
+    </span>
   );
 }
 
@@ -948,19 +1158,32 @@ function InsightsSection({
 function PlatformSection({
   children,
   copy,
+  sourceKey,
   status,
   title
 }: {
   children: React.ReactNode;
   copy: typeof ro;
+  sourceKey: "googleAds" | "ga4" | "meta";
   status?: SourceState;
   title: string;
 }) {
   return (
-    <section className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+    <section className="space-y-4 rounded-lg border border-slate-200 bg-white/90 p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
+          <div className="flex items-center gap-2">
+            <MetricIconView
+              icon={
+                sourceKey === "googleAds"
+                  ? "gads"
+                  : sourceKey === "ga4"
+                    ? "ga4"
+                    : "meta"
+              }
+            />
+            <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+          </div>
           {status ? <p className="mt-1 text-sm text-slate-500">{status.message}</p> : null}
         </div>
         <span
@@ -976,33 +1199,6 @@ function PlatformSection({
   );
 }
 
-function KpiStrip({
-  currency,
-  items
-}: {
-  currency: string;
-  items: Array<[string, number | undefined, ("currency" | "percent")?]>;
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-      {items.map(([label, value, kind]) => (
-        <div className="rounded-md bg-slate-50 p-3" key={label}>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {label}
-          </p>
-          <p className="mt-1 text-lg font-semibold text-slate-950">
-            {kind === "currency"
-              ? formatCurrency(value ?? 0, currency)
-              : kind === "percent"
-                ? `${formatNumber(value ?? 0)}%`
-                : formatNumber(value ?? 0)}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function ChartBlock({
   children,
   title
@@ -1012,20 +1208,27 @@ function ChartBlock({
 }) {
   return (
     <div className="rounded-md border border-slate-200 p-4">
-      <h3 className="mb-3 text-sm font-semibold text-slate-950">{title}</h3>
+      <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950">
+        <LineChartIcon aria-hidden="true" className="h-4 w-4 text-digital" />
+        {title}
+      </h3>
       {children}
     </div>
   );
 }
 
+type TableColumn = [string, string, ("currency" | "percent")?];
+
 function DataGrid({
-  blocks
+  blocks,
+  currency
 }: {
   blocks: Array<{
     title: string;
     rows: Array<Record<string, string | number>>;
-    columns: Array<[string, string]>;
+    columns: TableColumn[];
   }>;
+  currency: string;
 }) {
   const visibleBlocks = blocks.filter((block) => block.rows.length > 0);
 
@@ -1038,6 +1241,7 @@ function DataGrid({
       {visibleBlocks.map((block) => (
         <DataTable
           columns={block.columns}
+          currency={currency}
           key={block.title}
           rows={block.rows}
           title={block.title}
@@ -1049,10 +1253,12 @@ function DataGrid({
 
 function DataTable({
   columns,
+  currency,
   rows,
   title
 }: {
-  columns: Array<[string, string]>;
+  columns: TableColumn[];
+  currency: string;
   rows: Array<Record<string, string | number>>;
   title: string;
 }) {
@@ -1075,9 +1281,9 @@ function DataTable({
           <tbody className="divide-y divide-slate-100">
             {rows.map((row, index) => (
                 <tr key={`${title}-${index}`}>
-                  {columns.map(([key]) => (
+                  {columns.map(([key, , kind]) => (
                     <td className="whitespace-nowrap px-4 py-3" key={key}>
-                      {formatCell(row[key])}
+                      {formatCell(row[key], kind, currency)}
                     </td>
                   ))}
                 </tr>
@@ -1087,6 +1293,37 @@ function DataTable({
       </div>
     </div>
   );
+}
+
+function visibleConversionRows(rows: Array<Record<string, string | number>>) {
+  return rows
+    .filter(
+      (row) => Number(row.conversions ?? 0) > 0 || Number(row.all_conversions ?? 0) > 0
+    )
+    .sort((first, second) => {
+      const firstConversions = Number(first.conversions ?? 0);
+      const secondConversions = Number(second.conversions ?? 0);
+
+      if (firstConversions === 0 && secondConversions > 0) return 1;
+      if (firstConversions > 0 && secondConversions === 0) return -1;
+      return secondConversions - firstConversions;
+    });
+}
+
+function visibleLocationRows(rows: Array<Record<string, string | number>>) {
+  return rows.filter((row) => {
+    const name = String(row.location_name ?? row.location ?? "").trim();
+    const type = String(row.location_type ?? "").trim().toLowerCase();
+    const isCountry = ["country", "țară", "tara"].includes(type);
+
+    return name && !/^location id \d+$/i.test(name) && !isCountry;
+  });
+}
+
+function visibleGa4KeyEventRows(rows: Array<Record<string, string | number>>) {
+  return rows
+    .filter((row) => Number(row.key_events ?? 0) > 0)
+    .sort((first, second) => Number(second.key_events ?? 0) - Number(first.key_events ?? 0));
 }
 
 function formatNumber(value: number) {
@@ -1140,10 +1377,54 @@ function formatShortDate(value: string, locale: "ro" | "en") {
 }
 
 function formatRange(range: DateRange, locale: "ro" | "en") {
+  const start = new Date(`${range.startDate}T00:00:00.000Z`);
+  const end = new Date(`${range.endDate}T00:00:00.000Z`);
+  const sameYear = start.getUTCFullYear() === end.getUTCFullYear();
+  const sameMonth = sameYear && start.getUTCMonth() === end.getUTCMonth();
+
+  if (sameMonth) {
+    return `${formatDay(range.startDate, locale)} - ${formatFriendlyDate(
+      range.endDate,
+      locale
+    )}`;
+  }
+
+  if (sameYear) {
+    return `${formatDayMonth(range.startDate, locale)} - ${formatFriendlyDate(
+      range.endDate,
+      locale
+    )}`;
+  }
+
   return `${formatFriendlyDate(range.startDate, locale)} - ${formatFriendlyDate(
     range.endDate,
     locale
   )}`;
+}
+
+function formatDay(value: string, locale: "ro" | "en") {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", {
+    day: "2-digit",
+    timeZone: "UTC"
+  }).format(date);
+}
+
+function formatDayMonth(value: string, locale: "ro" | "en") {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  const parts = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", {
+    day: "2-digit",
+    month: "long",
+    timeZone: "UTC"
+  }).formatToParts(date);
+
+  return parts
+    .map((part) =>
+      part.type === "month"
+        ? `${part.value.charAt(0).toUpperCase()}${part.value.slice(1)}`
+        : part.value
+    )
+    .join("");
 }
 
 function formatDateTime(value: string, locale: "ro" | "en") {
@@ -1233,12 +1514,24 @@ function insightDotClass(status: TrendStatus) {
   return "bg-slate-400";
 }
 
-function formatCell(value: string | number | undefined) {
+function formatCell(
+  value: string | number | undefined,
+  kind: "currency" | "percent" | undefined,
+  currency: string
+) {
   if (value === undefined || value === null) {
     return "-";
   }
 
   if (typeof value === "number") {
+    if (kind === "currency") {
+      return formatCurrency(value, currency);
+    }
+
+    if (kind === "percent") {
+      return `${formatNumber(value)}%`;
+    }
+
     return formatNumber(value);
   }
 

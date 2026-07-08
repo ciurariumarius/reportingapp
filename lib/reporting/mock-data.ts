@@ -4,6 +4,8 @@ import type {
   Ga4Report,
   GoogleAdsReport,
   MetaReport,
+  OwnerOverview,
+  OwnerPlatformOverview,
   PlatformKpis,
   ReportResponse,
   SourceState
@@ -22,6 +24,7 @@ type ClientConfig = Pick<
   | "currency"
   | "locale"
   | "reportType"
+  | "logoUrl"
   | "ga4PropertyId"
   | "metaAdAccountId"
   | "googleAdsSheetUrl"
@@ -80,6 +83,126 @@ function calcCpa(spend: number, conversions: number) {
 
 function calcRoas(value: number, spend: number) {
   return spend ? round(value / spend) : 0;
+}
+
+function buildOwnerNarrative({
+  locale,
+  paidConversions,
+  reportType,
+  roas,
+  websiteConversions,
+  websiteRevenue
+}: {
+  locale: "ro" | "en";
+  paidConversions: number;
+  reportType: "lead" | "ecommerce";
+  roas: number;
+  websiteConversions: number;
+  websiteRevenue: number;
+}) {
+  if (locale === "en") {
+    if (reportType === "ecommerce" && (websiteRevenue > 0 || roas > 0)) {
+      return `The media budget generated ${paidConversions.toLocaleString("en-US")} platform conversions, ${websiteConversions.toLocaleString("en-US")} website conversions and a total ROAS of ${roas.toLocaleString("en-US")}.`;
+    }
+
+    return `The media budget generated ${paidConversions.toLocaleString("en-US")} platform conversions and ${websiteConversions.toLocaleString("en-US")} total website conversions.`;
+  }
+
+  if (reportType === "ecommerce" && (websiteRevenue > 0 || roas > 0)) {
+    return `Bugetul a generat ${paidConversions.toLocaleString("ro-RO")} conversii în platforme, ${websiteConversions.toLocaleString("ro-RO")} conversii totale pe site și un ROAS total de ${roas.toLocaleString("ro-RO")}.`;
+  }
+
+  return `Bugetul a generat ${paidConversions.toLocaleString("ro-RO")} conversii în platforme și ${websiteConversions.toLocaleString("ro-RO")} conversii totale pe site.`;
+}
+
+function ownerPlatform(
+  key: "googleAds" | "meta",
+  label: string,
+  report: GoogleAdsReport | MetaReport | undefined
+): OwnerPlatformOverview | null {
+  if (!report) {
+    return null;
+  }
+
+  const spend = report.kpis.spend ?? 0;
+  const conversions = report.kpis.conversions ?? 0;
+  const conversionValue = report.kpis.conversionValue ?? 0;
+
+  return {
+    key,
+    label,
+    spend,
+    clicks: report.kpis.clicks ?? 0,
+    conversions,
+    costPerConversion: conversions ? round(spend / conversions) : 0,
+    conversionValue,
+    roas: spend ? round(conversionValue / spend) : 0
+  };
+}
+
+function buildOwnerOverview({
+  ga4,
+  googleAds,
+  locale,
+  meta,
+  reportType
+}: {
+  ga4: ReportBlock<Ga4Report>;
+  googleAds: ReportBlock<GoogleAdsReport>;
+  locale: "ro" | "en";
+  meta: ReportBlock<MetaReport>;
+  reportType: "lead" | "ecommerce";
+}): OwnerOverview {
+  const platforms = [
+    ownerPlatform("googleAds", "Google Ads", googleAds.report),
+    ownerPlatform("meta", "Meta Ads", meta.report)
+  ].filter((item): item is OwnerPlatformOverview => Boolean(item));
+  const totalSpend = round(platforms.reduce((sum, item) => sum + item.spend, 0));
+  const totalClicks = platforms.reduce((sum, item) => sum + item.clicks, 0);
+  const totalConversions = round(
+    platforms.reduce((sum, item) => sum + item.conversions, 0),
+    2
+  );
+  const conversionValue = round(
+    platforms.reduce((sum, item) => sum + item.conversionValue, 0)
+  );
+  const websiteRevenue = ga4.report?.kpis.revenue ?? 0;
+  const websiteConversions = ga4.report?.kpis.keyEvents ?? 0;
+  const roas = totalSpend ? round(conversionValue / totalSpend) : 0;
+
+  return {
+    narrative: buildOwnerNarrative({
+      locale,
+      paidConversions: totalConversions,
+      reportType,
+      roas,
+      websiteConversions,
+      websiteRevenue
+    }),
+    platforms,
+    paid: {
+      totalSpend,
+      totalClicks,
+      totalConversions,
+      costPerConversion: totalConversions ? round(totalSpend / totalConversions) : 0,
+      conversionValue,
+      roas
+    },
+    website: {
+      sessions: ga4.report?.kpis.sessions ?? 0,
+      conversions: websiteConversions,
+      revenue: websiteRevenue
+    },
+    ...(reportType === "ecommerce"
+      ? {
+          ecommerce: {
+            websiteRevenue,
+            platformValue: conversionValue,
+            totalRoas: roas
+          }
+        }
+      : {})
+  };
 }
 
 export function googleAdsReport(client: ClientConfig, range: DateRange) {
@@ -444,6 +567,7 @@ export function buildReportResponse({
   meta: ReportBlock<MetaReport>;
 }): ReportResponse {
   const locale = client.locale === "en" ? "en" : "ro";
+  const reportType = client.reportType === "ecommerce" ? "ecommerce" : "lead";
   const googleSpend = googleAds.report?.kpis.spend ?? 0;
   const metaSpend = meta.report?.kpis.spend ?? 0;
   const googleClicks = googleAds.report?.kpis.clicks ?? 0;
@@ -458,7 +582,8 @@ export function buildReportResponse({
       currency: client.currency,
       timezone: client.timezone,
       locale,
-      reportType: client.reportType === "ecommerce" ? "ecommerce" : "lead"
+      reportType,
+      logoUrl: client.logoUrl
     },
     dateRange: range,
     displayPeriod: formatFriendlyRange(range, locale),
@@ -470,6 +595,13 @@ export function buildReportResponse({
       websiteSessions: ga4.report?.kpis.sessions ?? 0,
       websiteKeyEvents: ga4.report?.kpis.keyEvents ?? 0
     },
+    ownerOverview: buildOwnerOverview({
+      ga4,
+      googleAds,
+      locale,
+      meta,
+      reportType
+    }),
     sources: {
       googleAds: googleAds.state,
       ga4: ga4.state,

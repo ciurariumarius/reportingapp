@@ -1,0 +1,3 @@
+ALTER TABLE `clients`
+  ADD COLUMN `website_url` VARCHAR(512) NULL,
+  ADD COLUMN `logo_url` VARCHAR(1024) NULL;

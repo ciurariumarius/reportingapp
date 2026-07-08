@@ -19,7 +19,7 @@ const REQUIRED_TABS = [
     headers: ["date", "conversion_action_name", "conversions"]
   },
   { name: "gads_devices", headers: ["date", "device", "cost"] },
-  { name: "gads_locations", headers: ["date", "location", "cost"] }
+  { name: "gads_locations", headers: ["date", "cost"] }
 ];
 
 export function extractGoogleSheetId(sheetUrl: string | null | undefined) {
@@ -300,6 +300,73 @@ function mapBreakdown(rows: Array<Record<string, string>>, key: "device" | "loca
     .sort((first, second) => Number(second.cost) - Number(first.cost));
 }
 
+function isNumericId(value: string | undefined) {
+  return Boolean(value?.trim()) && /^\d+$/.test(value?.trim() ?? "");
+}
+
+const COMMON_GEO_TARGETS: Record<string, { name: string; type: string }> = {
+  "2642": { name: "România", type: "Țară" }
+};
+
+function locationFields(row: Record<string, string>) {
+  const rawLocation = row.location?.trim();
+  const rawId = row.location_id?.trim() || (isNumericId(rawLocation) ? rawLocation : "");
+  const rawName = row.location_name?.trim();
+  const knownLocation = rawId ? COMMON_GEO_TARGETS[rawId] : null;
+  const locationName =
+    rawName || knownLocation?.name || (rawLocation && !isNumericId(rawLocation) ? rawLocation : "");
+
+  return {
+    locationId: rawId,
+    locationName: locationName || (rawId ? `Location ID ${rawId}` : "Unknown location"),
+    locationType:
+      row.location_type?.trim() ||
+      knownLocation?.type ||
+      (rawId && !locationName ? "ID Google Ads" : "")
+  };
+}
+
+function mapLocations(rows: Array<Record<string, string>>) {
+  return [
+    ...groupBy(rows, (row) => {
+      const location = locationFields(row);
+      return `${location.locationId}:${location.locationName}`;
+    }).values()
+  ]
+    .map((locationRows) => {
+      const cost = round(sumRows(locationRows, "cost"));
+      const conversions = round(sumRows(locationRows, "conversions"), 2);
+      const location = locationFields(locationRows[0]);
+
+      return {
+        location: location.locationName,
+        location_id: location.locationId,
+        location_name: location.locationName,
+        location_type: location.locationType,
+        cost,
+        impressions: Math.round(sumRows(locationRows, "impressions")),
+        clicks: Math.round(sumRows(locationRows, "clicks")),
+        conversions,
+        all_conversions: round(sumRows(locationRows, "all_conversions"), 2),
+        cpa: calcCpa(cost, conversions)
+      };
+    })
+    .filter((row) => !isCountryLocation(row))
+    .sort((first, second) => Number(second.cost) - Number(first.cost));
+}
+
+function isCountryLocation(row: Record<string, string | number>) {
+  const type = String(row.location_type ?? "").trim().toLowerCase();
+  const id = String(row.location_id ?? "").trim();
+  const name = String(row.location_name ?? row.location ?? "").trim().toLowerCase();
+
+  return (
+    ["country", "țară", "tara"].includes(type) ||
+    id === "2642" ||
+    ["romania", "românia"].includes(name)
+  );
+}
+
 function buildKpis(daily: Array<Record<string, string | number>>): PlatformKpis {
   const spend = round(daily.reduce((sum, row) => sum + Number(row.cost ?? 0), 0));
   const impressions = daily.reduce((sum, row) => sum + Number(row.impressions ?? 0), 0);
@@ -377,7 +444,7 @@ export async function fetchGoogleAdsSheetReport(
         campaigns: mapCampaigns(campaignRows),
         conversions: mapConversions(conversionRows),
         devices: mapBreakdown(deviceRows, "device"),
-        locations: mapBreakdown(locationRows, "location")
+        locations: mapLocations(locationRows)
       }
     };
   } catch (error) {

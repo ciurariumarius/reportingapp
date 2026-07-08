@@ -181,7 +181,51 @@ export function formatFriendlyDate(value: string, locale: "ro" | "en" = "ro") {
     .join("");
 }
 
+function formatFriendlyDayMonth(value: string, locale: "ro" | "en" = "ro") {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  const parts = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", {
+    day: "2-digit",
+    month: "long",
+    timeZone: "UTC"
+  }).formatToParts(date);
+
+  return parts
+    .map((part) =>
+      part.type === "month"
+        ? `${part.value.charAt(0).toUpperCase()}${part.value.slice(1)}`
+        : part.value
+    )
+    .join("");
+}
+
+function formatFriendlyDay(value: string, locale: "ro" | "en" = "ro") {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", {
+    day: "2-digit",
+    timeZone: "UTC"
+  }).format(date);
+}
+
 export function formatFriendlyRange(range: DateRange, locale: "ro" | "en" = "ro") {
+  const start = toUtcDate(range.startDate);
+  const end = toUtcDate(range.endDate);
+  const sameYear = start.getUTCFullYear() === end.getUTCFullYear();
+  const sameMonth = sameYear && start.getUTCMonth() === end.getUTCMonth();
+
+  if (sameMonth) {
+    return `${formatFriendlyDay(range.startDate, locale)} - ${formatFriendlyDate(
+      range.endDate,
+      locale
+    )}`;
+  }
+
+  if (sameYear) {
+    return `${formatFriendlyDayMonth(range.startDate, locale)} - ${formatFriendlyDate(
+      range.endDate,
+      locale
+    )}`;
+  }
+
   return `${formatFriendlyDate(range.startDate, locale)} - ${formatFriendlyDate(
     range.endDate,
     locale

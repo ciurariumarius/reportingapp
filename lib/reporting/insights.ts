@@ -179,28 +179,28 @@ function fallbackByLocale(locale: Locale) {
 
   return {
     verdict: insight(
-      "Construim baza de comparatie",
-      "Nu exista inca suficiente date in perioada precedenta pentru un verdict sigur.",
+      "Construim baza de comparație",
+      "Nu există încă suficiente date în perioada precedentă pentru un verdict sigur.",
       "neutral"
     ),
     improved: [
       insight(
         "Datele curente sunt disponibile",
-        "Raportul este pregatit pentru perioada selectata. Trendurile vor deveni mai utile dupa ce exista date comparabile in perioada precedenta.",
+        "Raportul este pregătit pentru perioada selectată. Trendurile vor deveni mai utile după ce există date comparabile în perioada precedentă.",
         "neutral"
       )
     ],
     attention: [
       insight(
-        "Comparatie insuficienta",
-        "Evita interpretarea stricta a procentelor pana cand perioada precedenta are date comparabile.",
+        "Comparație insuficientă",
+        "Evită interpretarea strictă a procentelor până când perioada precedentă are date comparabile.",
         "neutral"
       )
     ],
     nextActions: [
       insight(
-        "Pastreaza sursele conectate",
-        "Asigura-te ca Google Ads, GA4 si Meta raman conectate pentru comparatii corecte in rapoartele urmatoare.",
+        "Păstrează sursele conectate",
+        "Asigură-te că Google Ads, GA4 și Meta rămân conectate pentru comparații corecte în rapoartele următoare.",
         "neutral"
       )
     ]
@@ -225,18 +225,18 @@ function leadInsights(comparison: ReportComparison, locale: Locale): AutomatedIn
           fixSite: "Check landing pages, forms and contact flows because traffic is not converting proportionally."
         }
       : {
-          verdictGood: ["Eficienta lead-urilor s-a imbunatatit", "Lead-urile au crescut, iar costul per lead a ramas stabil sau s-a imbunatatit."],
-          verdictWarn: ["Eficienta necesita atentie", "Lead-urile au scazut sau costul per lead a crescut fata de perioada precedenta."],
-          verdictNeutral: ["Performanta este relativ stabila", "Metricile principale de lead sunt apropiate de perioada precedenta."],
+          verdictGood: ["Eficiența lead-urilor s-a îmbunătățit", "Lead-urile au crescut, iar costul per lead a rămas stabil sau s-a îmbunătățit."],
+          verdictWarn: ["Eficiența necesită atenție", "Lead-urile au scăzut sau costul per lead a crescut față de perioada precedentă."],
+          verdictNeutral: ["Performanța este relativ stabilă", "Metricile principale de lead sunt apropiate de perioada precedentă."],
           leadsUp: "Lead-urile raportate de platforme au crescut cu",
-          cplDown: "Costul per lead s-a imbunatatit cu",
+          cplDown: "Costul per lead s-a îmbunătățit cu",
           sessionsUp: "Sesiunile pe site au crescut cu",
-          leadsDown: "Lead-urile raportate de platforme au scazut cu",
+          leadsDown: "Lead-urile raportate de platforme au scăzut cu",
           cplUp: "Costul per lead a crescut cu",
-          trafficMismatch: "Traficul pe site a crescut, dar evenimentele importante nu au urmat aceeasi directie.",
-          scale: "Verifica cele mai bune campanii si ia in calcul mutarea bugetului catre segmentele cu CPL bun.",
-          fixCpl: "Revizuieste campaniile cu buget mare si volum mic de lead-uri inainte de cresterea bugetului.",
-          fixSite: "Verifica landing page-urile, formularele si fluxurile de contact pentru ca traficul nu converteste proportional."
+          trafficMismatch: "Traficul pe site a crescut, dar evenimentele importante nu au urmat aceeași direcție.",
+          scale: "Verifică cele mai bune campanii și ia în calcul mutarea bugetului către segmentele cu CPL bun.",
+          fixCpl: "Revizuiește campaniile cu buget mare și volum mic de lead-uri înainte de creșterea bugetului.",
+          fixSite: "Verifică landing page-urile, formularele și fluxurile de contact pentru că traficul nu convertește proporțional."
         };
 
   const improved: AutomatedInsight[] = [];
@@ -276,7 +276,7 @@ function leadInsights(comparison: ReportComparison, locale: Locale): AutomatedIn
   if (comparison.primaryResults.status === "warning") {
     attention.push(
       insight(
-        locale === "en" ? "Lead volume declined" : "Volumul de lead-uri a scazut",
+        locale === "en" ? "Lead volume declined" : "Volumul de lead-uri a scăzut",
         `${copy.leadsDown} ${percentText(comparison.primaryResults, locale)}.`,
         "warning"
       )
@@ -286,7 +286,7 @@ function leadInsights(comparison: ReportComparison, locale: Locale): AutomatedIn
   if (comparison.costPerResult.status === "warning") {
     attention.push(
       insight(
-        locale === "en" ? "CPL increased" : "CPL in crestere",
+        locale === "en" ? "CPL increased" : "CPL în creștere",
         `${copy.cplUp} ${percentText(comparison.costPerResult, locale)}.`,
         "warning"
       )
@@ -308,19 +308,19 @@ function leadInsights(comparison: ReportComparison, locale: Locale): AutomatedIn
 
   if (attention.some((item) => item.title.includes("CPL") || item.title.includes("lead"))) {
     nextActions.push(
-      insight(locale === "en" ? "Improve efficiency first" : "Optimizeaza eficienta", copy.fixCpl, "warning")
+      insight(locale === "en" ? "Improve efficiency first" : "Optimizează eficiența", copy.fixCpl, "warning")
     );
   }
 
   if (attention.some((item) => item.message === copy.trafficMismatch)) {
     nextActions.push(
-      insight(locale === "en" ? "Audit landing pages" : "Verifica landing page-urile", copy.fixSite, "warning")
+      insight(locale === "en" ? "Audit landing pages" : "Verifică landing page-urile", copy.fixSite, "warning")
     );
   }
 
   if (!nextActions.length) {
     nextActions.push(
-      insight(locale === "en" ? "Scale carefully" : "Scaleaza controlat", copy.scale, "good")
+      insight(locale === "en" ? "Scale carefully" : "Scalează controlat", copy.scale, "good")
     );
   }
 
@@ -341,8 +341,8 @@ function leadInsights(comparison: ReportComparison, locale: Locale): AutomatedIn
 
   return {
     verdict: insight(verdictTitle, verdictMessage, verdictStatus),
-    improved: improved.length ? improved.slice(0, 3) : [insight(locale === "en" ? "No major improvement" : "Fara imbunatatire majora", locale === "en" ? "The main lead metrics are close to the comparison period." : "Metricile principale de lead sunt apropiate de perioada de comparatie.", "neutral")],
-    attention: attention.length ? attention.slice(0, 3) : [insight(locale === "en" ? "No major risk" : "Fara risc major", locale === "en" ? "No major negative movement stands out in the selected period." : "Nu se vede o miscare negativa majora in perioada selectata.", "neutral")],
+    improved: improved.length ? improved.slice(0, 3) : [insight(locale === "en" ? "No major improvement" : "Fără îmbunătățire majoră", locale === "en" ? "The main lead metrics are close to the comparison period." : "Metricile principale de lead sunt apropiate de perioada de comparație.", "neutral")],
+    attention: attention.length ? attention.slice(0, 3) : [insight(locale === "en" ? "No major risk" : "Fără risc major", locale === "en" ? "No major negative movement stands out in the selected period." : "Nu se vede o mișcare negativă majoră în perioada selectată.", "neutral")],
     nextActions: nextActions.slice(0, 3)
   };
 }
@@ -369,19 +369,19 @@ function ecommerceInsights(
           fixSite: "Check product pages, checkout and tracking because sessions are not turning into revenue proportionally."
         }
       : {
-          verdictGood: ["Eficienta ecommerce s-a imbunatatit", "Valoarea achizitiilor sau ROAS-ul s-a imbunatatit fata de perioada precedenta."],
-          verdictWarn: ["Eficienta ecommerce necesita atentie", "Achizitiile, valoarea sau ROAS-ul s-au miscat in directia gresita."],
-          verdictNeutral: ["Performanta ecommerce este stabila", "Achizitiile si ROAS-ul sunt apropiate de perioada precedenta."],
-          purchasesUp: "Achizitiile au crescut cu",
-          valueUp: "Valoarea achizitiilor raportata de platforme a crescut cu",
-          roasUp: "ROAS-ul s-a imbunatatit cu",
-          purchasesDown: "Achizitiile au scazut cu",
-          valueDown: "Valoarea achizitiilor a scazut cu",
-          roasDown: "ROAS-ul a scazut cu",
-          revenueGap: "Sesiunile pe site au crescut, dar venitul din site nu a urmat aceeasi directie.",
-          scale: "Prioritizeaza campaniile si produsele cu ROAS bun inainte de cresterea bugetului.",
-          fixRoas: "Revizuieste campaniile cu spend mare si valoare slaba inainte de cresterea bugetului.",
-          fixSite: "Verifica paginile de produs, checkout-ul si trackingul pentru ca sesiunile nu se transforma proportional in venit."
+          verdictGood: ["Eficiența ecommerce s-a îmbunătățit", "Valoarea achizițiilor sau ROAS-ul s-a îmbunătățit față de perioada precedentă."],
+          verdictWarn: ["Eficiența ecommerce necesită atenție", "Achizițiile, valoarea sau ROAS-ul s-au mișcat în direcția greșită."],
+          verdictNeutral: ["Performanța ecommerce este stabilă", "Achizițiile și ROAS-ul sunt apropiate de perioada precedentă."],
+          purchasesUp: "Achizițiile au crescut cu",
+          valueUp: "Valoarea achizițiilor raportată de platforme a crescut cu",
+          roasUp: "ROAS-ul s-a îmbunătățit cu",
+          purchasesDown: "Achizițiile au scăzut cu",
+          valueDown: "Valoarea achizițiilor a scăzut cu",
+          roasDown: "ROAS-ul a scăzut cu",
+          revenueGap: "Sesiunile pe site au crescut, dar venitul din site nu a urmat aceeași direcție.",
+          scale: "Prioritizează campaniile și produsele cu ROAS bun înainte de creșterea bugetului.",
+          fixRoas: "Revizuiește campaniile cu spend mare și valoare slabă înainte de creșterea bugetului.",
+          fixSite: "Verifică paginile de produs, checkout-ul și trackingul pentru că sesiunile nu se transformă proporțional în venit."
         };
 
   const improved: AutomatedInsight[] = [];
@@ -421,7 +421,7 @@ function ecommerceInsights(
   if (comparison.primaryResults.status === "warning") {
     attention.push(
       insight(
-        locale === "en" ? "Purchases declined" : "Achizitiile au scazut",
+        locale === "en" ? "Purchases declined" : "Achizițiile au scăzut",
         `${copy.purchasesDown} ${percentText(comparison.primaryResults, locale)}.`,
         "warning"
       )
@@ -431,7 +431,7 @@ function ecommerceInsights(
   if (comparison.platformValue.status === "warning") {
     attention.push(
       insight(
-        locale === "en" ? "Purchase value declined" : "Valoarea a scazut",
+        locale === "en" ? "Purchase value declined" : "Valoarea a scăzut",
         `${copy.valueDown} ${percentText(comparison.platformValue, locale)}.`,
         "warning"
       )
@@ -441,7 +441,7 @@ function ecommerceInsights(
   if (comparison.roas.status === "warning") {
     attention.push(
       insight(
-        locale === "en" ? "ROAS declined" : "ROAS in scadere",
+        locale === "en" ? "ROAS declined" : "ROAS în scădere",
         `${copy.roasDown} ${percentText(comparison.roas, locale)}.`,
         "warning"
       )
@@ -463,19 +463,19 @@ function ecommerceInsights(
 
   if (attention.some((item) => item.title.includes("ROAS") || item.message.includes("valoare") || item.message.includes("value"))) {
     nextActions.push(
-      insight(locale === "en" ? "Protect ROAS" : "Protejeaza ROAS-ul", copy.fixRoas, "warning")
+      insight(locale === "en" ? "Protect ROAS" : "Protejează ROAS-ul", copy.fixRoas, "warning")
     );
   }
 
   if (attention.some((item) => item.message === copy.revenueGap)) {
     nextActions.push(
-      insight(locale === "en" ? "Audit checkout" : "Verifica checkout-ul", copy.fixSite, "warning")
+      insight(locale === "en" ? "Audit checkout" : "Verifică checkout-ul", copy.fixSite, "warning")
     );
   }
 
   if (!nextActions.length) {
     nextActions.push(
-      insight(locale === "en" ? "Scale profitable demand" : "Scaleaza cererea profitabila", copy.scale, "good")
+      insight(locale === "en" ? "Scale profitable demand" : "Scalează cererea profitabilă", copy.scale, "good")
     );
   }
 
@@ -497,8 +497,8 @@ function ecommerceInsights(
 
   return {
     verdict: insight(verdictTitle, verdictMessage, verdictStatus),
-    improved: improved.length ? improved.slice(0, 3) : [insight(locale === "en" ? "No major improvement" : "Fara imbunatatire majora", locale === "en" ? "The main ecommerce metrics are close to the comparison period." : "Metricile principale ecommerce sunt apropiate de perioada de comparatie.", "neutral")],
-    attention: attention.length ? attention.slice(0, 3) : [insight(locale === "en" ? "No major risk" : "Fara risc major", locale === "en" ? "No major negative movement stands out in the selected period." : "Nu se vede o miscare negativa majora in perioada selectata.", "neutral")],
+    improved: improved.length ? improved.slice(0, 3) : [insight(locale === "en" ? "No major improvement" : "Fără îmbunătățire majoră", locale === "en" ? "The main ecommerce metrics are close to the comparison period." : "Metricile principale ecommerce sunt apropiate de perioada de comparație.", "neutral")],
+    attention: attention.length ? attention.slice(0, 3) : [insight(locale === "en" ? "No major risk" : "Fără risc major", locale === "en" ? "No major negative movement stands out in the selected period." : "Nu se vede o mișcare negativă majoră în perioada selectată.", "neutral")],
     nextActions: nextActions.slice(0, 3)
   };
 }

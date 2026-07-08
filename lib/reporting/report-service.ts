@@ -25,6 +25,7 @@ type ClientWithSources = Pick<
   | "currency"
   | "locale"
   | "reportType"
+  | "logoUrl"
   | "ga4PropertyId"
   | "metaAdAccountId"
   | "googleAdsSheetUrl"
@@ -49,6 +50,7 @@ function cacheKey(client: ClientWithSources, range: DateRange) {
   return [
     client.slug,
     client.reportType,
+    client.logoUrl ?? "",
     range.startDate,
     range.endDate,
     client.ga4PropertyId ?? "",
@@ -81,7 +83,7 @@ async function safeSource<T>(
     return {
       state: {
         status: "error",
-        message: `${label} nu a putut fi incarcat momentan.`
+        message: `${label} nu a putut fi încărcat momentan.`
       }
     };
   } finally {

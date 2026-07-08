@@ -35,6 +35,26 @@ function report(overrides: ReportOverrides = {}): ReportResponse {
       websiteSessions: overview?.websiteSessions ?? 0,
       websiteKeyEvents: overview?.websiteKeyEvents ?? 0
     },
+    ownerOverview: {
+      narrative: "",
+      platforms: [],
+      paid: {
+        totalSpend: overview?.totalSpend ?? 0,
+        totalClicks: overview?.totalClicks ?? 0,
+        totalConversions: overview?.platformReportedConversions ?? 0,
+        costPerConversion:
+          overview?.totalSpend && overview?.platformReportedConversions
+            ? overview.totalSpend / overview.platformReportedConversions
+            : 0,
+        conversionValue: 0,
+        roas: 0
+      },
+      website: {
+        sessions: overview?.websiteSessions ?? 0,
+        conversions: overview?.websiteKeyEvents ?? 0,
+        revenue: 0
+      }
+    },
     sources: {
       googleAds: { status: "missing_config", message: "" },
       ga4: { status: "missing_config", message: "" },

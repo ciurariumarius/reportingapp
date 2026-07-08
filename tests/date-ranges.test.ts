@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   daysBetween,
+  formatFriendlyRange,
   getPreviousEquivalentDateRange,
   getPresetDateRange,
   normalizeDateRange
@@ -57,5 +58,20 @@ describe("date ranges", () => {
       startDate: "2026-06-01",
       endDate: "2026-06-30"
     });
+  });
+
+  it("formats friendly ranges without repeating the year", () => {
+    expect(
+      formatFriendlyRange({
+        startDate: "2026-07-01",
+        endDate: "2026-07-08"
+      })
+    ).toBe("01 - 08 Iulie 2026");
+    expect(
+      formatFriendlyRange({
+        startDate: "2026-06-24",
+        endDate: "2026-07-08"
+      })
+    ).toBe("24 Iunie - 08 Iulie 2026");
   });
 });
