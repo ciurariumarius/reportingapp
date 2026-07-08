@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHmac } from "node:crypto";
+import { getServerSetting } from "../app-settings";
 import type { DateRange } from "../date-ranges";
 import type { MetaReport, PlatformKpis, ReportType, SourceState } from "../types/report";
 import { missingMeta, round } from "./mock-data";
@@ -79,16 +80,16 @@ export function normalizeMetaAdAccountId(value: string | null | undefined) {
   return compact.toLowerCase().startsWith("act_") ? compact : `act_${compact}`;
 }
 
-function getMetaConfig(): MetaConfig | null {
-  const accessToken = process.env.META_ACCESS_TOKEN?.trim();
+async function getMetaConfig(): Promise<MetaConfig | null> {
+  const accessToken = (await getServerSetting("META_ACCESS_TOKEN"))?.trim();
 
   if (!accessToken) {
     return null;
   }
 
-  const rawVersion = process.env.META_API_VERSION?.trim() || "v23.0";
+  const rawVersion = (await getServerSetting("META_API_VERSION"))?.trim() || "v23.0";
   const apiVersion = rawVersion.startsWith("v") ? rawVersion : `v${rawVersion}`;
-  const appSecret = process.env.META_APP_SECRET?.trim();
+  const appSecret = (await getServerSetting("META_APP_SECRET"))?.trim();
 
   return {
     accessToken,
@@ -379,7 +380,7 @@ export async function fetchMetaReport(
     return { state: missingMeta };
   }
 
-  const config = getMetaConfig();
+  const config = await getMetaConfig();
   if (!config) {
     return { state: credentialsState() };
   }
@@ -454,7 +455,7 @@ export async function testMetaConnection(metaAdAccountId: string | null) {
     return { ok: false, state: missingMeta };
   }
 
-  const config = getMetaConfig();
+  const config = await getMetaConfig();
   if (!config) {
     return { ok: false, state: credentialsState() };
   }

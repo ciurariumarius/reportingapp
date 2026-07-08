@@ -3,12 +3,23 @@ import { AdminCsrfBootstrap } from "./AdminCsrfBootstrap";
 import { LogoutButton } from "./LogoutButton";
 
 type AdminShellProps = {
+  activeNav?: "clients" | "settings";
   title: string;
   description?: string;
   children: React.ReactNode;
 };
 
-export function AdminShell({ title, description, children }: AdminShellProps) {
+const navItems = [
+  { href: "/admin/clients", label: "Clienti", key: "clients" },
+  { href: "/admin/settings", label: "Settings", key: "settings" }
+] as const;
+
+export function AdminShell({
+  activeNav = "clients",
+  title,
+  description,
+  children
+}: AdminShellProps) {
   return (
     <main className="min-h-screen bg-slate-50">
       <AdminCsrfBootstrap />
@@ -17,13 +28,21 @@ export function AdminShell({ title, description, children }: AdminShellProps) {
           <Link className="font-semibold tracking-wide text-digital" href="/admin/clients">
             DigitalDot Reports
           </Link>
-          <nav className="flex items-center gap-3">
-            <Link
-              className="focus-ring rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-              href="/admin/clients"
-            >
-              Clienti
-            </Link>
+          <nav className="flex items-center gap-2">
+            {navItems.map((item) => (
+              <Link
+                className={[
+                  "focus-ring rounded-md px-3 py-2 text-sm font-medium",
+                  item.key === activeNav
+                    ? "bg-digital-mist text-digital"
+                    : "text-slate-700 hover:bg-slate-100"
+                ].join(" ")}
+                href={item.href}
+                key={item.key}
+              >
+                {item.label}
+              </Link>
+            ))}
             <LogoutButton />
           </nav>
         </div>

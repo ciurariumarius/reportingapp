@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/AdminShell";
 import { ClientForm } from "@/components/ClientForm";
+import { getPublicAppUrl } from "@/lib/app-settings";
 import { requireAdminPage } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -21,7 +22,7 @@ export default async function EditClientPage({ params }: PageProps) {
     notFound();
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  const appUrl = await getPublicAppUrl();
   const reportUrl = appUrl ? `${appUrl}/r/${client.slug}` : `/r/${client.slug}`;
 
   return (

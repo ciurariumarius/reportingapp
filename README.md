@@ -55,6 +55,10 @@ Open `http://localhost:3000/admin/login`.
 
 Google Sheets, GA4, and Meta variables are included in `.env.example`. GA4 and Meta are fetched server-side when their credentials and client IDs are configured.
 
+The admin area also has `/admin/settings` for deployment-wide agency settings.
+Values saved there are stored server-side and override `.env`; `.env` remains the
+fallback for automated deployments.
+
 ## Access Model
 
 Admin access uses one env-configured account and an HttpOnly signed cookie.
@@ -84,7 +88,7 @@ Future connector changes should preserve the dashboard response shape.
 2. Create or use a service account.
 3. Add the service account email as Viewer or higher in GA4 property access management.
 4. In the admin client settings, set `GA4 property ID` to either `123456789` or `properties/123456789`.
-5. Set env vars:
+5. Set env vars or save the same values in `/admin/settings`:
 
 ```env
 GA4_CLIENT_EMAIL=service-account@project.iam.gserviceaccount.com
@@ -104,7 +108,7 @@ The GA4 connector fetches:
 2. In Business Settings, create or use a System User.
 3. Grant that System User access to the ad accounts you want to report on.
 4. Generate a System User token with `ads_read`.
-5. Set env vars:
+5. Set env vars or save the same values in `/admin/settings`:
 
 ```env
 META_ACCESS_TOKEN=EA...
@@ -113,6 +117,9 @@ META_APP_SECRET=
 ```
 
 `META_APP_SECRET` is optional. When set, server requests include `appsecret_proof`.
+
+The public privacy policy for Meta app setup is available at `/privacy`. In
+production, use `https://your-reporting-domain/privacy`.
 
 In the admin client settings, set `Meta ad account ID` to either `act_123456789` or `123456789`. The app normalizes it to `act_...` internally.
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
+import { getServerSetting } from "../app-settings";
 import type { DateRange } from "../date-ranges";
 import type { Ga4Report, PlatformKpis, SourceState } from "../types/report";
 import { missingGa4, round } from "./mock-data";
@@ -33,13 +34,13 @@ function normalizePropertyId(propertyId: string) {
   return trimmed.startsWith("properties/") ? trimmed : `properties/${trimmed}`;
 }
 
-function getPrivateKey() {
-  return process.env.GA4_PRIVATE_KEY?.replace(/\\n/g, "\n");
+async function getPrivateKey() {
+  return (await getServerSetting("GA4_PRIVATE_KEY"))?.replace(/\\n/g, "\n");
 }
 
-function createClient() {
-  const clientEmail = process.env.GA4_CLIENT_EMAIL;
-  const privateKey = getPrivateKey();
+async function createClient() {
+  const clientEmail = await getServerSetting("GA4_CLIENT_EMAIL");
+  const privateKey = await getPrivateKey();
 
   if (!clientEmail || !privateKey) {
     return null;
@@ -100,7 +101,7 @@ export async function fetchGa4Report(
     return { state: missingGa4 };
   }
 
-  const analyticsClient = createClient();
+  const analyticsClient = await createClient();
 
   if (!analyticsClient) {
     return { state: credentialsState() };
@@ -260,7 +261,7 @@ export async function testGa4Connection(ga4PropertyId: string | null) {
     return { ok: false, state: missingGa4 };
   }
 
-  const analyticsClient = createClient();
+  const analyticsClient = await createClient();
 
   if (!analyticsClient) {
     return { ok: false, state: credentialsState() };

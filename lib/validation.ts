@@ -37,6 +37,27 @@ export const clientPayloadSchema = z.object({
 
 export type ClientPayload = z.infer<typeof clientPayloadSchema>;
 
+const optionalTrimmed = z.string().trim().optional().nullable();
+
+export const adminSettingsPayloadSchema = z.object({
+  publicAppUrl: optionalTrimmed.refine(
+    (value) => !value || /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(value),
+    "URL-ul public trebuie sa inceapa cu http:// sau https://."
+  ),
+  metaAccessToken: optionalTrimmed,
+  metaApiVersion: z
+    .string()
+    .trim()
+    .regex(/^v?\d+\.\d+$/, "Versiunea Meta API trebuie sa arate ca v23.0.")
+    .default("v23.0"),
+  metaAppSecret: optionalTrimmed,
+  clearMetaAppSecret: z.boolean().default(false),
+  ga4ClientEmail: optionalTrimmed,
+  ga4PrivateKey: optionalTrimmed
+});
+
+export type AdminSettingsPayload = z.infer<typeof adminSettingsPayloadSchema>;
+
 export function emptyToNull(value?: string | null) {
   return value?.trim() ? value.trim() : null;
 }
