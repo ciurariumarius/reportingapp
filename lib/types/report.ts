@@ -21,11 +21,55 @@ export type PlatformKpis = {
   revenue?: number;
 };
 
+export type ReportType = "lead" | "ecommerce";
+
 export type SourceStatus = "mock" | "ready" | "missing_config" | "empty" | "error";
 
 export type SourceState = {
   status: SourceStatus;
   message: string;
+};
+
+export type SourceSummaryItem = SourceState & {
+  key: "googleAds" | "ga4" | "meta";
+  label: string;
+};
+
+export type TrendDirection = "up" | "down" | "flat";
+export type TrendStatus = "good" | "warning" | "neutral";
+
+export type MetricTrend = {
+  current: number;
+  previous: number;
+  absoluteChange: number;
+  percentChange: number | null;
+  direction: TrendDirection;
+  status: TrendStatus;
+};
+
+export type ReportComparison = {
+  totalSpend: MetricTrend;
+  totalClicks: MetricTrend;
+  primaryResults: MetricTrend;
+  costPerResult: MetricTrend;
+  platformValue: MetricTrend;
+  roas: MetricTrend;
+  websiteSessions: MetricTrend;
+  websiteKeyEvents: MetricTrend;
+  websiteRevenue: MetricTrend;
+};
+
+export type AutomatedInsight = {
+  title: string;
+  message: string;
+  status: TrendStatus;
+};
+
+export type AutomatedInsights = {
+  verdict: AutomatedInsight;
+  improved: AutomatedInsight[];
+  attention: AutomatedInsight[];
+  nextActions: AutomatedInsight[];
 };
 
 export type GoogleAdsReport = {
@@ -59,8 +103,13 @@ export type ReportResponse = {
     currency: string;
     timezone: string;
     locale: "ro" | "en";
+    reportType: ReportType;
   };
   dateRange: DateRange;
+  displayPeriod: string;
+  comparisonRange?: DateRange;
+  displayComparisonPeriod?: string;
+  lastUpdatedAt: string;
   overview: {
     totalSpend: number;
     totalClicks: number;
@@ -68,17 +117,15 @@ export type ReportResponse = {
     websiteSessions: number;
     websiteKeyEvents: number;
   };
+  comparison?: ReportComparison;
+  automatedInsights?: AutomatedInsights;
   sources: {
     googleAds: SourceState;
     ga4: SourceState;
     meta: SourceState;
   };
+  sourceSummary: SourceSummaryItem[];
   googleAds?: GoogleAdsReport;
   ga4?: Ga4Report;
   meta?: MetaReport;
-  insights?: {
-    whatWentWell: string;
-    whatNeedsAttention: string;
-    recommendedNextActions: string;
-  };
 };

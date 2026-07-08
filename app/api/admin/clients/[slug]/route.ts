@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi, handleApiError } from "@/lib/api";
+import { requireAdminApi, handleApiError, requireAdminMutation } from "@/lib/api";
 import { clientDataFromPayload, publicClient } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
 import { clientPayloadSchema } from "@/lib/validation";
@@ -14,13 +14,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { slug } = await context.params;
   const client = await prisma.client.findUnique({
-    where: { slug },
-    include: {
-      monthlyInsights: {
-        orderBy: { month: "desc" },
-        take: 12
-      }
-    }
+    where: { slug }
   });
 
   if (!client) {
@@ -31,7 +25,7 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const authError = await requireAdminApi();
+  const authError = await requireAdminMutation(request);
   if (authError) return authError;
 
   try {
@@ -48,37 +42,8 @@ export async function PATCH(request: Request, context: RouteContext) {
       data: clientDataFromPayload(payload)
     });
 
-    if (payload.insightMonth) {
-      await prisma.monthlyInsight.upsert({
-        where: {
-          clientId_month: {
-            clientId: client.id,
-            month: payload.insightMonth
-          }
-        },
-        update: {
-          whatWentWell: payload.whatWentWell ?? "",
-          whatNeedsAttention: payload.whatNeedsAttention ?? "",
-          recommendedNextActions: payload.recommendedNextActions ?? ""
-        },
-        create: {
-          clientId: client.id,
-          month: payload.insightMonth,
-          whatWentWell: payload.whatWentWell ?? "",
-          whatNeedsAttention: payload.whatNeedsAttention ?? "",
-          recommendedNextActions: payload.recommendedNextActions ?? ""
-        }
-      });
-    }
-
     const freshClient = await prisma.client.findUniqueOrThrow({
-      where: { id: client.id },
-      include: {
-        monthlyInsights: {
-          orderBy: { month: "desc" },
-          take: 12
-        }
-      }
+      where: { id: client.id }
     });
 
     return NextResponse.json({ client: publicClient(freshClient) });
@@ -87,8 +52,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
-  const authError = await requireAdminApi();
+export async function DELETE(request: Request, context: RouteContext) {
+  const authError = await requireAdminMutation(request);
   if (authError) return authError;
 
   const { slug } = await context.params;

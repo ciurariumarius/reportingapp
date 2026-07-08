@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildMockReportResponse } from "@/lib/reporting/mock-data";
+import { buildReport } from "@/lib/reporting/report-service";
 
 const configuredClient = {
   name: "Demo Client",
@@ -7,6 +8,7 @@ const configuredClient = {
   timezone: "Europe/Bucharest",
   currency: "RON",
   locale: "ro",
+  reportType: "lead",
   ga4PropertyId: "properties/123",
   metaAdAccountId: "act_123",
   googleAdsSheetUrl: "https://docs.google.com/spreadsheets/d/demo/edit"
@@ -20,6 +22,13 @@ describe("mock report aggregation", () => {
     });
 
     expect(report.sources.googleAds.status).toBe("mock");
+    expect(report.displayPeriod).toBe("01 Iulie 2026 - 07 Iulie 2026");
+    expect(report.lastUpdatedAt).toBeTruthy();
+    expect(report.sourceSummary.map((source) => source.key)).toEqual([
+      "googleAds",
+      "ga4",
+      "meta"
+    ]);
     expect(report.sources.ga4.status).toBe("mock");
     expect(report.sources.meta.status).toBe("mock");
     expect(report.googleAds?.conversions[0].conversion_action_name).toBeTruthy();
@@ -49,5 +58,30 @@ describe("mock report aggregation", () => {
     expect(report.googleAds).toBeUndefined();
     expect(report.ga4).toBeUndefined();
     expect(report.meta).toBeUndefined();
+  });
+
+  it("builds comparison and automated insights for the public report contract", async () => {
+    const report = await buildReport(
+      {
+        ...configuredClient,
+        ga4PropertyId: null,
+        metaAdAccountId: null,
+        googleAdsSheetUrl: null
+      },
+      {
+        startDate: "2026-07-01",
+        endDate: "2026-07-07"
+      }
+    );
+
+    expect(report.comparisonRange).toEqual({
+      startDate: "2026-06-24",
+      endDate: "2026-06-30"
+    });
+    expect(report.displayComparisonPeriod).toBe("24 Iunie 2026 - 30 Iunie 2026");
+    expect(report.sources.googleAds.status).toBe("missing_config");
+    expect(report.googleAds).toBeUndefined();
+    expect(report.automatedInsights?.verdict.message).toBeTruthy();
+    expect("insights" in report).toBe(false);
   });
 });

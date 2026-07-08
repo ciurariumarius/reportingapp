@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { hashPassword, verifyPassword } from "@/lib/security/passwords";
+import { createCsrfToken, verifyCsrfToken } from "@/lib/security/csrf";
+import {
+  clearLoginAttempts,
+  isLoginRateLimited,
+  recordFailedLogin,
+  resetLoginRateLimitForTests
+} from "@/lib/security/rate-limit";
 import {
   createSignedSession,
   verifySignedSession,
@@ -54,5 +61,32 @@ describe("share tokens", () => {
 
     expect(token).not.toBe(hash);
     expect(safeEqual(hashToken(token), hash)).toBe(true);
+  });
+});
+
+describe("csrf tokens", () => {
+  it("accepts signed csrf tokens and rejects tampering", () => {
+    const token = createCsrfToken("secret");
+
+    expect(verifyCsrfToken(token, "secret")).toBe(true);
+    expect(verifyCsrfToken(`${token}x`, "secret")).toBe(false);
+    expect(verifyCsrfToken(token, "other-secret")).toBe(false);
+  });
+});
+
+describe("login rate limiting", () => {
+  it("blocks after repeated failed attempts and can be cleared", () => {
+    resetLoginRateLimitForTests();
+
+    for (let index = 0; index < 4; index += 1) {
+      recordFailedLogin("127.0.0.1:admin");
+    }
+
+    expect(isLoginRateLimited("127.0.0.1:admin")).toBe(false);
+    recordFailedLogin("127.0.0.1:admin");
+    expect(isLoginRateLimited("127.0.0.1:admin")).toBe(true);
+
+    clearLoginAttempts("127.0.0.1:admin");
+    expect(isLoginRateLimited("127.0.0.1:admin")).toBe(false);
   });
 });

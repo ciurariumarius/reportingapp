@@ -15,10 +15,10 @@ export async function GET(request: Request, context: RouteContext) {
   const { slug } = await context.params;
   const url = new URL(request.url);
   const token = url.searchParams.get("token");
-  const deniedUrl = new URL(`/client/${slug}/report?access=denied`, url.origin);
+  const deniedPath = `/client/${slug}/report?access=denied`;
 
   if (!token) {
-    return NextResponse.redirect(deniedUrl);
+    return redirectRelative(deniedPath);
   }
 
   const client = await prisma.client.findFirst({
@@ -30,11 +30,10 @@ export async function GET(request: Request, context: RouteContext) {
     !client?.shareTokenHash ||
     !safeEqual(hashToken(token), client.shareTokenHash)
   ) {
-    return NextResponse.redirect(deniedUrl);
+    return redirectRelative(deniedPath);
   }
 
-  const cleanUrl = new URL(`/client/${slug}/report`, url.origin);
-  const response = NextResponse.redirect(cleanUrl);
+  const response = redirectRelative(`/client/${slug}/report`);
   response.cookies.set(
     getReportCookieName(slug),
     createReportSessionCookie(slug),
@@ -42,4 +41,14 @@ export async function GET(request: Request, context: RouteContext) {
   );
 
   return response;
+}
+
+function redirectRelative(location: string) {
+  return new NextResponse(null, {
+    status: 307,
+    headers: {
+      Location: location,
+      "X-Robots-Tag": "noindex, nofollow, noarchive"
+    }
+  });
 }

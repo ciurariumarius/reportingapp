@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi, handleApiError } from "@/lib/api";
+import { requireAdminApi, handleApiError, requireAdminMutation } from "@/lib/api";
 import { clientDataFromPayload, publicClient } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
 import { clientPayloadSchema } from "@/lib/validation";
@@ -9,20 +9,14 @@ export async function GET() {
   if (authError) return authError;
 
   const clients = await prisma.client.findMany({
-    orderBy: { name: "asc" },
-    include: {
-      monthlyInsights: {
-        orderBy: { month: "desc" },
-        take: 1
-      }
-    }
+    orderBy: { name: "asc" }
   });
 
   return NextResponse.json({ clients: clients.map(publicClient) });
 }
 
 export async function POST(request: Request) {
-  const authError = await requireAdminApi();
+  const authError = await requireAdminMutation(request);
   if (authError) return authError;
 
   try {
@@ -31,26 +25,8 @@ export async function POST(request: Request) {
       data: clientDataFromPayload(payload)
     });
 
-    if (payload.insightMonth) {
-      await prisma.monthlyInsight.create({
-        data: {
-          clientId: client.id,
-          month: payload.insightMonth,
-          whatWentWell: payload.whatWentWell ?? "",
-          whatNeedsAttention: payload.whatNeedsAttention ?? "",
-          recommendedNextActions: payload.recommendedNextActions ?? ""
-        }
-      });
-    }
-
     const freshClient = await prisma.client.findUniqueOrThrow({
-      where: { id: client.id },
-      include: {
-        monthlyInsights: {
-          orderBy: { month: "desc" },
-          take: 1
-        }
-      }
+      where: { id: client.id }
     });
 
     return NextResponse.json({ client: publicClient(freshClient) }, { status: 201 });

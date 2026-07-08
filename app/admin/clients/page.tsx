@@ -9,18 +9,12 @@ export default async function ClientsPage() {
   await requireAdminPage();
 
   const clients = await prisma.client.findMany({
-    orderBy: { name: "asc" },
-    include: {
-      monthlyInsights: {
-        orderBy: { month: "desc" },
-        take: 1
-      }
-    }
+    orderBy: { name: "asc" }
   });
 
   return (
     <AdminShell
-      description="Configureaza clientii, sursele de date si linkurile secrete pentru rapoarte."
+      description="Configureaza clientii, sursele de date si linkurile de raport."
       title="Clienti"
     >
       <div className="mb-5 flex justify-end">
@@ -37,9 +31,7 @@ export default async function ClientsPage() {
           <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Client</th>
-              <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Surse</th>
-              <th className="px-4 py-3">Link</th>
               <th className="px-4 py-3 text-right">Actiuni</th>
             </tr>
           </thead>
@@ -51,30 +43,12 @@ export default async function ClientsPage() {
                     <div className="font-medium text-slate-950">{client.name}</div>
                     <div className="text-xs text-slate-500">{client.slug}</div>
                   </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={
-                        client.active
-                          ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
-                          : "rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600"
-                      }
-                    >
-                      {client.active ? "Activ" : "Inactiv"}
-                    </span>
-                  </td>
                   <td className="px-4 py-3 text-slate-600">
                     <div>GA4: {client.ga4PropertyId ? "configurat" : "lipsa"}</div>
                     <div>Meta: {client.metaAdAccountId ? "configurat" : "lipsa"}</div>
                     <div>
                       Google Ads: {client.googleAdsSheetUrl ? "configurat" : "lipsa"}
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {client.shareTokenHash ? (
-                      <span className="text-emerald-700">activ</span>
-                    ) : (
-                      <span className="text-slate-500">negenerat</span>
-                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
@@ -88,7 +62,7 @@ export default async function ClientsPage() {
               ))
             ) : (
               <tr>
-                <td className="px-4 py-10 text-center text-slate-500" colSpan={5}>
+                <td className="px-4 py-10 text-center text-slate-500" colSpan={3}>
                   Nu exista clienti inca.
                 </td>
               </tr>

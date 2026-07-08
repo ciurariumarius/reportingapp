@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,6 +15,7 @@ model Client {
   timezone          String           @default("Europe/Bucharest")
   currency          String           @default("RON")
   locale            String           @default("ro")
+  reportType        String           @default("lead") @map("report_type")
   ga4PropertyId     String?          @map("ga4_property_id")
   metaAdAccountId   String?          @map("meta_ad_account_id")
   googleAdsSheetUrl String?          @map("google_ads_sheet_url")

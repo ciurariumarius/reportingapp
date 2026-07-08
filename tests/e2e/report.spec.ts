@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("client report requires a valid secret link", async ({ page }) => {
-  await page.goto("/client/digitaldot-demo/report");
-  await expect(page.getByText("Acces restrictionat")).toBeVisible();
+test("client report is public by slug", async ({ page }) => {
+  await page.goto("/r/digitaldot-demo");
+  await expect(page.getByText("DigitalDot Demo")).toBeVisible();
 });

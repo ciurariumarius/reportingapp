@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMonthFromDateRange, normalizeDateRange } from "@/lib/date-ranges";
-import { buildMockReportResponse } from "@/lib/reporting/mock-data";
-import { getReportCookieName, verifyReportCookie } from "@/lib/auth";
+import { normalizeDateRange } from "@/lib/date-ranges";
+import { buildReport } from "@/lib/reporting/report-service";
 import { prisma } from "@/lib/prisma";
 
 type RouteContext = {
@@ -10,15 +9,6 @@ type RouteContext = {
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const { slug } = await context.params;
-  const session = verifyReportCookie(
-    slug,
-    request.cookies.get(getReportCookieName(slug))?.value
-  );
-
-  if (!session) {
-    return NextResponse.json({ error: "Acces neautorizat." }, { status: 401 });
-  }
-
   const url = new URL(request.url);
   let dateRange;
 
@@ -35,20 +25,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const client = await prisma.client.findFirst({
-    where: { slug, active: true },
-    include: {
-      monthlyInsights: {
-        where: { month: getMonthFromDateRange(dateRange) },
-        take: 1
-      }
-    }
+    where: { slug, active: true }
   });
 
   if (!client) {
     return NextResponse.json({ error: "Clientul nu exista." }, { status: 404 });
   }
 
-  return NextResponse.json(
-    buildMockReportResponse(client, dateRange, client.monthlyInsights[0] ?? null)
-  );
+  return NextResponse.json(await buildReport(client, dateRange));
 }

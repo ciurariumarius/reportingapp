@@ -6,6 +6,8 @@ export type DateRange = {
 };
 
 export type DatePreset =
+  | "yesterday"
+  | "thisWeek"
   | "last7"
   | "last30"
   | "thisMonth"
@@ -52,6 +54,19 @@ export function getPresetDateRange(preset: DatePreset, now = new Date()): DateRa
   const today = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
   );
+
+  if (preset === "yesterday") {
+    const yesterday = addDays(today, -1);
+    return { startDate: formatYmd(yesterday), endDate: formatYmd(yesterday) };
+  }
+
+  if (preset === "thisWeek") {
+    const dayOfWeek = today.getUTCDay() || 7;
+    return {
+      startDate: formatYmd(addDays(today, -(dayOfWeek - 1))),
+      endDate: formatYmd(today)
+    };
+  }
 
   if (preset === "last7") {
     return { startDate: formatYmd(addDays(today, -6)), endDate: formatYmd(today) };
@@ -122,6 +137,17 @@ export function getMonthFromDateRange(range: DateRange) {
   return range.endDate.slice(0, 7);
 }
 
+export function getPreviousEquivalentDateRange(range: DateRange): DateRange {
+  const length = daysBetween(range.startDate, range.endDate);
+  const previousEnd = addDays(toUtcDate(range.startDate), -1);
+  const previousStart = addDays(previousEnd, -(length - 1));
+
+  return {
+    startDate: formatYmd(previousStart),
+    endDate: formatYmd(previousEnd)
+  };
+}
+
 export function listDates(range: DateRange) {
   const dates: string[] = [];
   let cursor = toUtcDate(range.startDate);
@@ -133,4 +159,31 @@ export function listDates(range: DateRange) {
   }
 
   return dates;
+}
+
+export function formatFriendlyDate(value: string, locale: "ro" | "en" = "ro") {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  const parts = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC"
+  }).formatToParts(date);
+
+  return parts
+    .map((part) => {
+      if (part.type !== "month") {
+        return part.value;
+      }
+
+      return `${part.value.charAt(0).toUpperCase()}${part.value.slice(1)}`;
+    })
+    .join("");
+}
+
+export function formatFriendlyRange(range: DateRange, locale: "ro" | "en" = "ro") {
+  return `${formatFriendlyDate(range.startDate, locale)} - ${formatFriendlyDate(
+    range.endDate,
+    locale
+  )}`;
 }

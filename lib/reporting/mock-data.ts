@@ -1,5 +1,5 @@
-import type { Client, MonthlyInsight } from "@prisma/client";
-import { listDates, type DateRange } from "../date-ranges";
+import type { Client } from "@prisma/client";
+import { formatFriendlyRange, listDates, type DateRange } from "../date-ranges";
 import type {
   Ga4Report,
   GoogleAdsReport,
@@ -9,6 +9,11 @@ import type {
   SourceState
 } from "../types/report";
 
+type ReportBlock<T> = {
+  state: SourceState;
+  report?: T;
+};
+
 type ClientConfig = Pick<
   Client,
   | "name"
@@ -16,32 +21,33 @@ type ClientConfig = Pick<
   | "timezone"
   | "currency"
   | "locale"
+  | "reportType"
   | "ga4PropertyId"
   | "metaAdAccountId"
   | "googleAdsSheetUrl"
 >;
 
-const missingGoogleAds: SourceState = {
+export const missingGoogleAds: SourceState = {
   status: "missing_config",
   message: "Lipseste URL-ul Google Sheet pentru Google Ads."
 };
 
-const missingGa4: SourceState = {
+export const missingGa4: SourceState = {
   status: "missing_config",
   message: "Lipseste GA4 property ID."
 };
 
-const missingMeta: SourceState = {
+export const missingMeta: SourceState = {
   status: "missing_config",
   message: "Lipseste Meta ad account ID."
 };
 
-const mockState: SourceState = {
+export const mockState: SourceState = {
   status: "mock",
   message: "Date demonstrative V1. Conectorul live se poate activa ulterior."
 };
 
-function round(value: number, decimals = 2) {
+export function round(value: number, decimals = 2) {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
@@ -76,7 +82,7 @@ function calcRoas(value: number, spend: number) {
   return spend ? round(value / spend) : 0;
 }
 
-function googleAdsReport(client: ClientConfig, range: DateRange) {
+export function googleAdsReport(client: ClientConfig, range: DateRange) {
   if (!client.googleAdsSheetUrl) {
     return { state: missingGoogleAds };
   }
@@ -217,7 +223,7 @@ function googleAdsReport(client: ClientConfig, range: DateRange) {
   };
 }
 
-function ga4Report(client: ClientConfig, range: DateRange) {
+export function ga4Report(client: ClientConfig, range: DateRange) {
   if (!client.ga4PropertyId) {
     return { state: missingGa4 };
   }
@@ -310,7 +316,7 @@ function ga4Report(client: ClientConfig, range: DateRange) {
   };
 }
 
-function metaReport(client: ClientConfig, range: DateRange) {
+export function metaReport(client: ClientConfig, range: DateRange) {
   if (!client.metaAdAccountId) {
     return { state: missingMeta };
   }
@@ -409,16 +415,35 @@ function metaReport(client: ClientConfig, range: DateRange) {
 
 export function buildMockReportResponse(
   client: ClientConfig,
-  range: DateRange,
-  insight?: Pick<
-    MonthlyInsight,
-    "whatWentWell" | "whatNeedsAttention" | "recommendedNextActions"
-  > | null
+  range: DateRange
 ): ReportResponse {
   const googleAds = googleAdsReport(client, range);
   const ga4 = ga4Report(client, range);
   const meta = metaReport(client, range);
 
+  return buildReportResponse({
+    client,
+    range,
+    googleAds,
+    ga4,
+    meta
+  });
+}
+
+export function buildReportResponse({
+  client,
+  range,
+  googleAds,
+  ga4,
+  meta
+}: {
+  client: ClientConfig;
+  range: DateRange;
+  googleAds: ReportBlock<GoogleAdsReport>;
+  ga4: ReportBlock<Ga4Report>;
+  meta: ReportBlock<MetaReport>;
+}): ReportResponse {
+  const locale = client.locale === "en" ? "en" : "ro";
   const googleSpend = googleAds.report?.kpis.spend ?? 0;
   const metaSpend = meta.report?.kpis.spend ?? 0;
   const googleClicks = googleAds.report?.kpis.clicks ?? 0;
@@ -432,9 +457,12 @@ export function buildMockReportResponse(
       slug: client.slug,
       currency: client.currency,
       timezone: client.timezone,
-      locale: client.locale === "en" ? "en" : "ro"
+      locale,
+      reportType: client.reportType === "ecommerce" ? "ecommerce" : "lead"
     },
     dateRange: range,
+    displayPeriod: formatFriendlyRange(range, locale),
+    lastUpdatedAt: new Date().toISOString(),
     overview: {
       totalSpend: round(googleSpend + metaSpend),
       totalClicks: googleClicks + metaClicks,
@@ -447,13 +475,13 @@ export function buildMockReportResponse(
       ga4: ga4.state,
       meta: meta.state
     },
+    sourceSummary: [
+      { key: "googleAds", label: "Google Ads", ...googleAds.state },
+      { key: "ga4", label: "Website / GA4", ...ga4.state },
+      { key: "meta", label: "Meta Ads", ...meta.state }
+    ],
     googleAds: googleAds.report,
     ga4: ga4.report,
-    meta: meta.report,
-    insights: {
-      whatWentWell: insight?.whatWentWell ?? "",
-      whatNeedsAttention: insight?.whatNeedsAttention ?? "",
-      recommendedNextActions: insight?.recommendedNextActions ?? ""
-    }
+    meta: meta.report
   };
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminCsrfBootstrap } from "./AdminCsrfBootstrap";
 import { LogoutButton } from "./LogoutButton";
 
 type AdminShellProps = {
@@ -10,6 +11,7 @@ type AdminShellProps = {
 export function AdminShell({ title, description, children }: AdminShellProps) {
   return (
     <main className="min-h-screen bg-slate-50">
+      <AdminCsrfBootstrap />
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
           <Link className="font-semibold tracking-wide text-digital" href="/admin/clients">

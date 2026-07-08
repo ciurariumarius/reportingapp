@@ -359,7 +359,7 @@ function getLocationRows(dateRange) {
   const query = \`
     SELECT
       segments.date,
-      segments.geo_target_country,
+      geographic_view.country_criterion_id,
       metrics.cost_micros,
       metrics.impressions,
       metrics.clicks,
@@ -376,7 +376,7 @@ function getLocationRows(dateRange) {
 
     return [
       row.segments.date,
-      row.segments.geoTargetCountry || "Unknown location",
+      row.geographicView.countryCriterionId || "Unknown country",
       cost,
       number(row.metrics.impressions),
       number(row.metrics.clicks),
