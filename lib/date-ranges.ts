@@ -38,10 +38,20 @@ export function daysBetween(startDate: string, endDate: string) {
   return Math.floor((end - start) / 86_400_000) + 1;
 }
 
+function todayUtc(now: Date) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+function completeRange(start: Date, end: Date): DateRange {
+  if (start.getTime() > end.getTime()) {
+    return { startDate: formatYmd(end), endDate: formatYmd(end) };
+  }
+
+  return { startDate: formatYmd(start), endDate: formatYmd(end) };
+}
+
 export function getDefaultDateRange(now = new Date()): DateRange {
-  const end = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-  );
+  const end = addDays(todayUtc(now), -1);
   const start = addDays(end, -29);
 
   return {
@@ -51,33 +61,31 @@ export function getDefaultDateRange(now = new Date()): DateRange {
 }
 
 export function getPresetDateRange(preset: DatePreset, now = new Date()): DateRange {
-  const today = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-  );
+  const today = todayUtc(now);
+  const yesterday = addDays(today, -1);
 
   if (preset === "yesterday") {
-    const yesterday = addDays(today, -1);
     return { startDate: formatYmd(yesterday), endDate: formatYmd(yesterday) };
   }
 
   if (preset === "thisWeek") {
     const dayOfWeek = today.getUTCDay() || 7;
-    return {
-      startDate: formatYmd(addDays(today, -(dayOfWeek - 1))),
-      endDate: formatYmd(today)
-    };
+    return completeRange(addDays(today, -(dayOfWeek - 1)), yesterday);
   }
 
   if (preset === "last7") {
-    const yesterday = addDays(today, -1);
     return { startDate: formatYmd(addDays(yesterday, -6)), endDate: formatYmd(yesterday) };
   }
 
+  if (preset === "last30") {
+    return getDefaultDateRange(now);
+  }
+
   if (preset === "thisMonth") {
-    return {
-      startDate: formatYmd(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1))),
-      endDate: formatYmd(today)
-    };
+    return completeRange(
+      new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)),
+      yesterday
+    );
   }
 
   if (preset === "previousMonth") {

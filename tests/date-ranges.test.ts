@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   daysBetween,
   formatFriendlyRange,
+  getDefaultDateRange,
   getPreviousEquivalentDateRange,
   getPresetDateRange,
   normalizeDateRange
@@ -34,10 +35,24 @@ describe("date ranges", () => {
     });
   });
 
-  it("builds this week preset from Monday to today", () => {
+  it("builds the default range as 30 complete days ending yesterday", () => {
+    expect(getDefaultDateRange(new Date("2026-07-08T12:00:00Z"))).toEqual({
+      startDate: "2026-06-08",
+      endDate: "2026-07-07"
+    });
+  });
+
+  it("builds this week preset from Monday to yesterday", () => {
     expect(getPresetDateRange("thisWeek", new Date("2026-07-08T12:00:00Z"))).toEqual({
       startDate: "2026-07-06",
-      endDate: "2026-07-08"
+      endDate: "2026-07-07"
+    });
+  });
+
+  it("keeps this week preset valid on Mondays", () => {
+    expect(getPresetDateRange("thisWeek", new Date("2026-07-06T12:00:00Z"))).toEqual({
+      startDate: "2026-07-05",
+      endDate: "2026-07-05"
     });
   });
 
@@ -45,6 +60,27 @@ describe("date ranges", () => {
     expect(getPresetDateRange("last7", new Date("2026-07-08T12:00:00Z"))).toEqual({
       startDate: "2026-07-01",
       endDate: "2026-07-07"
+    });
+  });
+
+  it("builds last 30 days as complete days ending yesterday", () => {
+    expect(getPresetDateRange("last30", new Date("2026-07-08T12:00:00Z"))).toEqual({
+      startDate: "2026-06-08",
+      endDate: "2026-07-07"
+    });
+  });
+
+  it("builds this month preset from month start to yesterday", () => {
+    expect(getPresetDateRange("thisMonth", new Date("2026-07-08T12:00:00Z"))).toEqual({
+      startDate: "2026-07-01",
+      endDate: "2026-07-07"
+    });
+  });
+
+  it("keeps this month preset valid on the first day of the month", () => {
+    expect(getPresetDateRange("thisMonth", new Date("2026-07-01T12:00:00Z"))).toEqual({
+      startDate: "2026-06-30",
+      endDate: "2026-06-30"
     });
   });
 
