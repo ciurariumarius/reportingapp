@@ -41,6 +41,13 @@ describe("date ranges", () => {
     });
   });
 
+  it("builds last 7 days as complete days ending yesterday", () => {
+    expect(getPresetDateRange("last7", new Date("2026-07-08T12:00:00Z"))).toEqual({
+      startDate: "2026-07-01",
+      endDate: "2026-07-07"
+    });
+  });
+
   it("builds previous month preset", () => {
     expect(getPresetDateRange("previousMonth", new Date("2026-07-07T12:00:00Z"))).toEqual({
       startDate: "2026-06-01",

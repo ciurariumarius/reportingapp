@@ -69,7 +69,8 @@ export function getPresetDateRange(preset: DatePreset, now = new Date()): DateRa
   }
 
   if (preset === "last7") {
-    return { startDate: formatYmd(addDays(today, -6)), endDate: formatYmd(today) };
+    const yesterday = addDays(today, -1);
+    return { startDate: formatYmd(addDays(yesterday, -6)), endDate: formatYmd(yesterday) };
   }
 
   if (preset === "thisMonth") {
