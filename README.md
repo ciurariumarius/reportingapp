@@ -106,17 +106,26 @@ The GA4 connector fetches:
 
 1. Create or choose a Meta app with Marketing API access.
 2. In Business Settings, create or use a System User.
-3. Grant that System User access to the ad accounts you want to report on.
-4. Generate a System User token with `ads_read`.
-5. Set env vars or save the same values in `/admin/settings`:
+3. Add the Meta app to that System User.
+4. Grant that System User access to the ad accounts you want to report on.
+5. Generate a System User token with `ads_read` and choose expiration `Never`.
+6. Set env vars or save the same values in `/admin/settings`:
 
 ```env
 META_ACCESS_TOKEN=EA...
 META_API_VERSION=v23.0
+META_APP_ID=123456789012345
 META_APP_SECRET=
 ```
 
-`META_APP_SECRET` is optional. When set, server requests include `appsecret_proof`.
+`META_APP_ID` and `META_APP_SECRET` let the admin screen validate the token with
+Meta `debug_token` and show whether it is valid, expiring, or valid without
+expiration. `META_APP_SECRET` is optional for reporting requests; when set,
+server requests include `appsecret_proof`.
+
+For the recommended System User token with `Never` expiration, no automatic
+refresh job is needed. If `/admin/settings` reports an expiring token, generate a
+new System User token with `Never` expiration and replace the saved token.
 
 The public privacy policy for Meta app setup is available at `/privacy`. In
 production, use `https://your-reporting-domain/privacy`.

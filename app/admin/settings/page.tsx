@@ -33,6 +33,11 @@ function requestBaseUrl(headerList: Headers) {
   return `${protocol}://${host}`.replace(/\/+$/, "");
 }
 
+function settingDisplay(settings: SettingSnapshotItem[], key: SettingSnapshotItem["key"]) {
+  const displayValue = settings.find((setting) => setting.key === key)?.displayValue;
+  return displayValue === "Lipsa" ? "" : displayValue || "";
+}
+
 export default async function AdminSettingsPage() {
   await requireAdminPage();
 
@@ -49,12 +54,8 @@ export default async function AdminSettingsPage() {
     metaApiVersion:
       settings.find((setting) => setting.key === "META_API_VERSION")?.displayValue ||
       "v23.0",
-    ga4ClientEmail:
-      settings.find((setting) => setting.key === "GA4_CLIENT_EMAIL")?.displayValue ===
-      "Lipsa"
-        ? ""
-        : settings.find((setting) => setting.key === "GA4_CLIENT_EMAIL")?.displayValue ||
-          ""
+    metaAppId: settingDisplay(settings, "META_APP_ID"),
+    ga4ClientEmail: settingDisplay(settings, "GA4_CLIENT_EMAIL")
   };
 
   return (
@@ -118,6 +119,7 @@ export default async function AdminSettingsPage() {
 {`NEXT_PUBLIC_APP_URL=https://reports.agentie.ro
 META_ACCESS_TOKEN=EA...
 META_API_VERSION=v23.0
+META_APP_ID=123456789012345
 META_APP_SECRET=
 GA4_CLIENT_EMAIL=service-account@project.iam.gserviceaccount.com
 GA4_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n`}

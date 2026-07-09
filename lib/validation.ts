@@ -50,6 +50,7 @@ export const adminSettingsPayloadSchema = z.object({
     .trim()
     .regex(/^v?\d+\.\d+$/, "Versiunea Meta API trebuie sa arate ca v23.0.")
     .default("v23.0"),
+  metaAppId: optionalTrimmed,
   metaAppSecret: optionalTrimmed,
   clearMetaAppSecret: z.boolean().default(false),
   ga4ClientEmail: optionalTrimmed,

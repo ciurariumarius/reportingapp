@@ -12,6 +12,7 @@ export type ServerSettingKey =
   | "NEXT_PUBLIC_APP_URL"
   | "META_ACCESS_TOKEN"
   | "META_API_VERSION"
+  | "META_APP_ID"
   | "META_APP_SECRET"
   | "GA4_CLIENT_EMAIL"
   | "GA4_PRIVATE_KEY";
@@ -59,6 +60,14 @@ export const settingDefinitions: SettingDefinition[] = [
     required: true,
     sensitive: false,
     defaultValue: "v23.0"
+  },
+  {
+    key: "META_APP_ID",
+    label: "Meta app ID",
+    description: "Necesar impreuna cu app secret pentru validarea tokenului prin debug_token.",
+    group: "meta",
+    required: false,
+    sensitive: false
   },
   {
     key: "META_APP_SECRET",
@@ -246,6 +255,7 @@ export async function saveAdminSettings(payload: AdminSettingsPayload) {
   const values: Array<[ServerSettingKey, string | null | undefined, boolean]> = [
     ["NEXT_PUBLIC_APP_URL", payload.publicAppUrl, false],
     ["META_API_VERSION", payload.metaApiVersion, false],
+    ["META_APP_ID", payload.metaAppId, false],
     ["GA4_CLIENT_EMAIL", payload.ga4ClientEmail, false]
   ];
 
