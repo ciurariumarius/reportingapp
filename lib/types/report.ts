@@ -128,6 +128,7 @@ export type MetaReport = {
   daily: Array<Record<string, string | number>>;
   campaigns: Array<Record<string, string | number>>;
   actions: Array<Record<string, string | number>>;
+  attributionWindow?: string;
 };
 
 export type ReportResponse = {

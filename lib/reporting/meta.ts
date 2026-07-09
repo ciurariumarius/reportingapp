@@ -58,6 +58,8 @@ type MetaGraphResponse<T> = {
   };
 };
 
+const metaAttributionWindow = "1d_click";
+
 const readyState: SourceState = {
   status: "ready",
   message: "Date Meta Ads live prin Ads Insights API."
@@ -320,6 +322,10 @@ function formatActionName(
     return `Custom conversion ${customId}`;
   }
 
+  if (actionType.toLowerCase().includes("fb_pixel_custom")) {
+    return "Custom event";
+  }
+
   return actionType
     .replace(/^offsite_conversion\./, "")
     .replace(/^onsite_conversion\./, "")
@@ -466,6 +472,7 @@ export async function fetchMetaReport(
 
   const baseParams = {
     time_range: timeRange(range),
+    action_attribution_windows: metaAttributionWindow,
     limit: 500
   };
 
@@ -522,7 +529,8 @@ export async function fetchMetaReport(
           totalSpend,
           reportType,
           customConversionNames
-        )
+        ),
+        attributionWindow: metaAttributionWindow
       }
     };
   } catch (error) {

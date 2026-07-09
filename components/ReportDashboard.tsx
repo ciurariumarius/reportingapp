@@ -75,6 +75,7 @@ const ro = {
   total: "Total",
   conversionBreakdown: "Detalii conversii",
   noConversionBreakdown: "Nu există conversii detaliate pentru această platformă.",
+  metaAttributionWindow: "Atribuire Meta: 1 zi click",
   allConversionsShort: "toate",
   platformConversions: "Conversii raportate de platforme",
   platformRevenue: "Valoare generată",
@@ -164,6 +165,7 @@ const en: typeof ro = {
   total: "Total",
   conversionBreakdown: "Conversion details",
   noConversionBreakdown: "No detailed conversions for this platform.",
+  metaAttributionWindow: "Meta attribution: 1-day click",
   allConversionsShort: "all",
   platformConversions: "Platform-reported conversions",
   platformRevenue: "Generated value",
@@ -904,6 +906,12 @@ function OwnerOverviewSection({
                           <tr>
                             <td className="bg-slate-50 px-4 py-4" colSpan={5}>
                               <ConversionDetailsTable
+                                attributionLabel={
+                                  row.key === "meta" &&
+                                  report.meta?.attributionWindow === "1d_click"
+                                    ? copy.metaAttributionWindow
+                                    : undefined
+                                }
                                 copy={copy}
                                 currency={currency}
                                 details={row.details}
@@ -994,7 +1002,7 @@ function metaConversionDetails(report: ReportResponse): ConversionDetail[] {
     })
     .map((row) => ({
       key: String(row.action_type ?? row.action_name),
-      label: String(row.action_name ?? row.action_type ?? "Action"),
+      label: metaActionLabel(row, report.client.locale),
       conversions: Number(row.value ?? 0),
       value: Number(row.action_value ?? 0),
       costPerConversion: Number(row.cost_per_action ?? 0),
@@ -1002,11 +1010,26 @@ function metaConversionDetails(report: ReportResponse): ConversionDetail[] {
     }));
 }
 
+function metaActionLabel(
+  row: Record<string, string | number>,
+  locale: "ro" | "en"
+) {
+  const actionType = String(row.action_type ?? "");
+
+  if (actionType.toLowerCase().includes("fb_pixel_custom")) {
+    return locale === "en" ? "Custom event" : "Eveniment custom";
+  }
+
+  return String(row.action_name ?? row.action_type ?? "Action");
+}
+
 function ConversionDetailsTable({
+  attributionLabel,
   copy,
   currency,
   details
 }: {
+  attributionLabel?: string;
   copy: typeof ro;
   currency: string;
   details: ConversionDetail[];
@@ -1020,6 +1043,9 @@ function ConversionDetailsTable({
       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
         {copy.conversionBreakdown}
       </p>
+      {attributionLabel ? (
+        <p className="mb-3 text-xs font-medium text-slate-500">{attributionLabel}</p>
+      ) : null}
       <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-white text-left text-xs font-semibold uppercase tracking-wide text-slate-500">

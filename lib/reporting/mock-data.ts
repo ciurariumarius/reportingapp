@@ -539,7 +539,8 @@ export function metaReport(client: ClientConfig, range: DateRange) {
       kpis,
       daily,
       campaigns,
-      actions
+      actions,
+      attributionWindow: "1d_click"
     } satisfies MetaReport
   };
 }

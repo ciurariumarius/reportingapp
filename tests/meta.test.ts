@@ -164,7 +164,12 @@ describe("Meta Ads connector", () => {
       endDate: "2026-07-07"
     });
 
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("action_attribution_windows=1d_click"),
+      expect.any(Object)
+    );
     expect(result.state.status).toBe("ready");
+    expect(result.report?.attributionWindow).toBe("1d_click");
     expect(result.report?.kpis.conversions).toBe(2);
     expect(result.report?.kpis.conversionValue).toBe(500);
     expect(result.report?.kpis.roas).toBe(5);
@@ -264,6 +269,88 @@ describe("Meta Ads connector", () => {
       is_primary: 1,
       value: 7,
       cost_per_action: 28.57
+    });
+  });
+
+  it("keeps generic Meta custom pixel events visible as primary conversions", async () => {
+    process.env.META_ACCESS_TOKEN = "token";
+    process.env.META_API_VERSION = "v23.0";
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+
+      if (url.pathname.endsWith("/customconversions")) {
+        return new Response(JSON.stringify({ data: [] }));
+      }
+
+      expect(url.searchParams.get("action_attribution_windows")).toBe("1d_click");
+
+      if (url.searchParams.get("time_increment") === "1") {
+        return new Response(
+          JSON.stringify({
+            data: [
+              {
+                date_start: "2026-07-01",
+                spend: "80",
+                impressions: "1000",
+                inline_link_clicks: "40",
+                actions: [
+                  { action_type: "offsite_conversion.fb_pixel_custom", value: "3" }
+                ]
+              }
+            ]
+          })
+        );
+      }
+
+      if (url.searchParams.get("level") === "campaign") {
+        return new Response(
+          JSON.stringify({
+            data: [
+              {
+                campaign_id: "cmp_1",
+                campaign_name: "Custom event campaign",
+                spend: "80",
+                impressions: "1000",
+                inline_link_clicks: "40",
+                actions: [
+                  { action_type: "offsite_conversion.fb_pixel_custom", value: "3" }
+                ]
+              }
+            ]
+          })
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          data: [
+            {
+              spend: "80",
+              actions: [
+                { action_type: "offsite_conversion.fb_pixel_custom", value: "3" }
+              ],
+              cost_per_action_type: [
+                { action_type: "offsite_conversion.fb_pixel_custom", value: "26.67" }
+              ]
+            }
+          ]
+        })
+      );
+    }) as typeof fetch;
+
+    const result = await fetchMetaReport("123", "lead", {
+      startDate: "2026-07-01",
+      endDate: "2026-07-07"
+    });
+
+    expect(result.state.status).toBe("ready");
+    expect(result.report?.kpis.conversions).toBe(3);
+    expect(result.report?.actions[0]).toMatchObject({
+      action_name: "Custom event",
+      action_type: "offsite_conversion.fb_pixel_custom",
+      is_primary: 1,
+      value: 3,
+      cost_per_action: 26.67
     });
   });
 
