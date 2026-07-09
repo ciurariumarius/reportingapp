@@ -140,6 +140,7 @@ export type ReportResponse = {
     locale: "ro" | "en";
     reportType: ReportType;
     logoUrl?: string | null;
+    websiteUrl?: string | null;
   };
   dateRange: DateRange;
   displayPeriod: string;

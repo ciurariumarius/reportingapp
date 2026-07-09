@@ -19,13 +19,18 @@ import {
   Globe2,
   LineChart as LineChartIcon,
 } from "lucide-react";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getDefaultDateRange,
   getPresetDateRange,
   type DatePreset,
   type DateRange
 } from "@/lib/date-ranges";
+import {
+  friendlyLandingPageLabel,
+  metaActionCategory,
+  type MetaActionCategory
+} from "@/lib/reporting/presentation";
 import type {
   AutomatedInsight,
   ReportResponse,
@@ -44,10 +49,16 @@ const ro = {
   direction: "Marketing cu direcție",
   clarityLine: "Strategie clară. Execuție impecabilă. Rezultate măsurabile.",
   performanceSummary: "Direcția perioadei",
+  executiveSummary: "Rezumat executiv",
   budgetDirection: "Unde s-a dus bugetul",
   resultsProduced: "Ce rezultate a produs",
   ownerOverview: "Overview pentru owner",
   ownerOverviewHint: "Indicatorii principali pentru decizii rapide de business.",
+  clientWebsite: "Website",
+  campaignStatus: "Status",
+  statusGood: "Campaniile sunt active și generează date utile",
+  statusPartial: "Raport parțial: unele surse necesită verificare",
+  statusNoData: "Așteptăm date relevante în perioada selectată",
   comparisonPeriod: "Comparat cu",
   verdict: "Verdict",
   period: "Perioadă",
@@ -76,6 +87,38 @@ const ro = {
   conversionBreakdown: "Detalii conversii",
   noConversionBreakdown: "Nu există conversii detaliate pentru această platformă.",
   metaAttributionWindow: "Atribuire Meta: 1 zi click",
+  investedBudgetHelp: "Investiție media în perioada analizată.",
+  platformConversionsHelp: "Acțiuni urmărite în platformele de promovare.",
+  costPerConversionHelp: "Cost mediu pentru o acțiune urmărită.",
+  websiteTrafficHelp: "Trafic generat către website în perioada analizată.",
+  websiteConversionsHelp: "Acțiuni importante măsurate pe website.",
+  channelComparison: "Rolul fiecărui canal",
+  channel: "Canal",
+  campaignRole: "Rol în campanie",
+  mainResult: "Rezultat principal",
+  interpretation: "Interpretare",
+  googleRole: "Cerere activă",
+  googleInterpretation: "Utilizatorii caută activ serviciile sau produsele promovate.",
+  metaRole: "Vizibilitate + retargeting",
+  metaInterpretation: "Bun pentru awareness, trafic și reactivarea audiențelor calde.",
+  ga4Role: "Validare trafic",
+  ga4Interpretation: "Arată comportamentul pe site după ce utilizatorii ajung din campanii.",
+  mainChartTitle: "Evoluția conversiilor și a traficului",
+  observations: "Ce observăm în această perioadă",
+  optimizeNext: "Ce optimizăm mai departe",
+  finalConclusion: "Concluzie",
+  detailGoogleTitle: "Detalii Google Ads — campanii, costuri și conversii",
+  detailGoogleSubtitle: "Date utile pentru analiza internă și optimizarea campaniilor Search.",
+  detailMetaTitle: "Detalii Meta Ads — trafic, interacțiuni și retargeting",
+  detailMetaSubtitle: "Meta Ads susține vizibilitatea brandului, traficul către site și reactivarea audiențelor calde.",
+  detailWebsiteTitle: "Detalii website — trafic, pagini și comportament",
+  detailWebsiteSubtitle: "Aceste date arată cum se comportă utilizatorii după ce ajung pe site.",
+  detailTrackingTitle: "Status tehnic și sincronizare date",
+  detailTrackingSubtitle: "Informații despre conexiunile de date și ultima actualizare a raportului.",
+  trafficActions: "Trafic",
+  engagementActions: "Interacțiuni",
+  conversionActions: "Conversii importante",
+  otherActions: "Alte acțiuni",
   allConversionsShort: "toate",
   platformConversions: "Conversii raportate de platforme",
   platformRevenue: "Valoare generată",
@@ -134,10 +177,16 @@ const en: typeof ro = {
   direction: "Marketing with direction",
   clarityLine: "Clear strategy. Sharp execution. Measurable results.",
   performanceSummary: "Period direction",
+  executiveSummary: "Executive summary",
   budgetDirection: "Where the budget went",
   resultsProduced: "What it produced",
   ownerOverview: "Owner overview",
   ownerOverviewHint: "The main indicators for fast business decisions.",
+  clientWebsite: "Website",
+  campaignStatus: "Status",
+  statusGood: "Campaigns are active and producing useful data",
+  statusPartial: "Partial report: some sources need review",
+  statusNoData: "Waiting for relevant data in the selected period",
   comparisonPeriod: "Compared with",
   verdict: "Verdict",
   period: "Period",
@@ -166,6 +215,38 @@ const en: typeof ro = {
   conversionBreakdown: "Conversion details",
   noConversionBreakdown: "No detailed conversions for this platform.",
   metaAttributionWindow: "Meta attribution: 1-day click",
+  investedBudgetHelp: "Media investment in the selected period.",
+  platformConversionsHelp: "Tracked actions reported by advertising platforms.",
+  costPerConversionHelp: "Average cost for one tracked action.",
+  websiteTrafficHelp: "Traffic generated to the website during the period.",
+  websiteConversionsHelp: "Important actions measured on the website.",
+  channelComparison: "Role of each channel",
+  channel: "Channel",
+  campaignRole: "Campaign role",
+  mainResult: "Main result",
+  interpretation: "Interpretation",
+  googleRole: "Active demand",
+  googleInterpretation: "Users are actively searching for the promoted services or products.",
+  metaRole: "Visibility + retargeting",
+  metaInterpretation: "Useful for awareness, traffic and reactivating warm audiences.",
+  ga4Role: "Traffic validation",
+  ga4Interpretation: "Shows how users behave after arriving from campaigns.",
+  mainChartTitle: "Conversions and traffic trend",
+  observations: "What we observe in this period",
+  optimizeNext: "What we optimize next",
+  finalConclusion: "Conclusion",
+  detailGoogleTitle: "Google Ads details — campaigns, costs and conversions",
+  detailGoogleSubtitle: "Useful data for internal analysis and Search campaign optimization.",
+  detailMetaTitle: "Meta Ads details — traffic, interactions and retargeting",
+  detailMetaSubtitle: "Meta Ads supports brand visibility, website traffic and warm audience reactivation.",
+  detailWebsiteTitle: "Website details — traffic, pages and behavior",
+  detailWebsiteSubtitle: "These data show how users behave after they reach the website.",
+  detailTrackingTitle: "Technical status and data sync",
+  detailTrackingSubtitle: "Information about data connections and the latest report update.",
+  trafficActions: "Traffic",
+  engagementActions: "Engagement",
+  conversionActions: "Important conversions",
+  otherActions: "Other actions",
   allConversionsShort: "all",
   platformConversions: "Platform-reported conversions",
   platformRevenue: "Generated value",
@@ -273,6 +354,8 @@ export function ReportDashboard({
   const currency = report?.client.currency ?? "RON";
   const reportType = report?.client.reportType ?? "lead";
   const isEcommerceReport = reportType === "ecommerce";
+  const websiteUrl = report?.client.websiteUrl;
+  const campaignStatus = report ? campaignStatusLabel(report, copy) : null;
   const metaLabels =
     locale === "en"
       ? {
@@ -370,6 +453,26 @@ export function ReportDashboard({
               <p className="mt-4 max-w-2xl text-sm font-medium text-[#e5d5b8]">
                 {copy.clarityLine}
               </p>
+              {report ? (
+                <div className="mt-5 flex flex-wrap gap-2 text-sm">
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-slate-100">
+                    {copy.period}: {report.displayPeriod}
+                  </span>
+                  {websiteUrl ? (
+                    <a
+                      className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-slate-100 hover:border-[#8fd8ce]"
+                      href={websiteUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {copy.clientWebsite}: {formatWebsiteLabel(websiteUrl)}
+                    </a>
+                  ) : null}
+                  <span className="rounded-full border border-[#8fd8ce]/40 bg-[#8fd8ce]/15 px-3 py-1.5 text-[#d8fbf5]">
+                    {copy.campaignStatus}: {campaignStatus}
+                  </span>
+                </div>
+              ) : null}
             </div>
             <DateRangeControls
               copy={copy}
@@ -400,224 +503,54 @@ export function ReportDashboard({
           <ExecutiveSummary copy={copy} report={report} />
         ) : null}
 
+        {report ? <OwnerKpiCards copy={copy} report={report} /> : null}
+
+        {report ? <ChannelComparisonSection copy={copy} report={report} /> : null}
+
+        {report ? <OwnerTrendChart copy={copy} report={report} /> : null}
+
+        {report ? <ObservationsSection copy={copy} report={report} /> : null}
+
+        {report ? <OptimizationSection copy={copy} report={report} /> : null}
+
+        {report ? <ConclusionSection copy={copy} report={report} /> : null}
+
         {report ? (
-          <OwnerOverviewSection
-            copy={copy}
-            report={report}
-          />
-        ) : null}
-
-        <InsightsSection copy={copy} report={report} />
-
-        {report?.googleAds ? (
-          <PlatformSection
-            copy={copy}
-            sourceKey="googleAds"
-            status={report.sources.googleAds}
-            title={copy.googleAds}
-          >
-            <>
-              <ChartBlock title={copy.daily}>
-                <ResponsiveContainer height={280} width="100%">
-                  <LineChart data={report.googleAds.daily}>
-                    <CartesianGrid stroke="#e2e8f0" />
-                    <XAxis
-                      dataKey="date"
-                      minTickGap={24}
-                      tickFormatter={(date) => formatShortDate(String(date), locale)}
-                    />
-                    <YAxis />
-                    <Tooltip
-                      labelFormatter={(date) => formatFriendlyDate(String(date), locale)}
-                    />
-                    <Legend />
-                    <Line dataKey="cost" name={copy.totalSpend} stroke="#1c435e" />
-                    <Line dataKey="clicks" name="Clickuri" stroke="#0f766e" />
-                    <Line
-                      dataKey="conversions"
-                      name="Conversii"
-                      stroke="#b45309"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartBlock>
-              <DataGrid
+          <div className="space-y-4">
+            <DetailAccordion
+              subtitle={copy.detailGoogleSubtitle}
+              title={copy.detailGoogleTitle}
+            >
+              <GoogleAdsDetails
+                copy={copy}
                 currency={currency}
-                blocks={[
-                  {
-                    title: copy.campaigns,
-                    rows: report.googleAds.campaigns,
-                    columns: [
-                      ["campaign_name", "Campanie"],
-                      ["cost", copy.totalSpend, "currency"],
-                      ["conversions", "Conversii"],
-                      [
-                        "cpa",
-                        isEcommerceReport ? copy.costPerPurchase : copy.costPerLead,
-                        "currency"
-                      ],
-                      ["clicks", "Clickuri"],
-                      ...(isEcommerceReport
-                        ? [
-                            [
-                              "conversion_value",
-                              copy.platformConversionValue,
-                              "currency"
-                            ] as [
-                              string,
-                              string,
-                              "currency"
-                            ],
-                            ["roas", "ROAS"] as [string, string]
-                          ]
-                        : [])
-                    ]
-                  },
-                  {
-                    title: copy.conversions,
-                    rows: visibleConversionRows(report.googleAds.conversions),
-                    columns: [
-                      ["conversion_action_name", "Acțiune"],
-                      ["conversions", "Conversii"],
-                      ["all_conversions", "Toate conversiile"],
-                      ["conversion_value", "Valoare", "currency"]
-                    ]
-                  },
-                  {
-                    title: copy.locations,
-                    rows: visibleLocationRows(report.googleAds.locations),
-                    columns: [
-                      ["location_name", "Locație"],
-                      ["location_type", "Tip"],
-                      ["cost", copy.totalSpend, "currency"],
-                      ["clicks", "Clickuri"],
-                      ["conversions", "Conversii"],
-                      [
-                        "cpa",
-                        isEcommerceReport ? copy.costPerPurchase : copy.costPerLead,
-                        "currency"
-                      ]
-                    ]
-                  }
-                ]}
+                isEcommerceReport={isEcommerceReport}
+                report={report}
               />
-            </>
-          </PlatformSection>
-        ) : null}
-
-        {report?.ga4 ? (
-          <PlatformSection
-            copy={copy}
-            sourceKey="ga4"
-            status={report.sources.ga4}
-            title={copy.ga4}
-          >
-            <>
-              <ChartBlock title={copy.daily}>
-                <ResponsiveContainer height={280} width="100%">
-                  <BarChart data={report.ga4.daily}>
-                    <CartesianGrid stroke="#e2e8f0" />
-                    <XAxis
-                      dataKey="date"
-                      minTickGap={24}
-                      tickFormatter={(date) => formatShortDate(String(date), locale)}
-                    />
-                    <YAxis />
-                    <Tooltip
-                      labelFormatter={(date) => formatFriendlyDate(String(date), locale)}
-                    />
-                    <Legend />
-                    <Bar dataKey="sessions" fill="#1c435e" name="Sesiuni" />
-                    <Bar
-                      dataKey="key_events"
-                      fill="#0f766e"
-                      name="Conversii website"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartBlock>
-              <DataGrid
+            </DetailAccordion>
+            <DetailAccordion subtitle={copy.detailMetaSubtitle} title={copy.detailMetaTitle}>
+              <MetaAdsDetails
+                columns={metaCampaignColumns}
+                copy={copy}
                 currency={currency}
-                blocks={[
-                  {
-                    title: copy.channels,
-                    rows: report.ga4.channels,
-                    columns: [
-                      ["source_medium", "Sursa / medium"],
-                      ["sessions", "Sesiuni"],
-                      ["key_events", "Conversii website"],
-                      ["revenue", "Venit", "currency"]
-                    ]
-                  },
-                  {
-                    title: copy.landingPages,
-                    rows: report.ga4.landingPages,
-                    columns: [
-                      ["landing_page", "Pagina"],
-                      ["sessions", "Sesiuni"],
-                      ["key_events", "Conversii website"],
-                      ["engagement_rate", "Engagement"]
-                    ]
-                  },
-                  {
-                    title: "Conversii website",
-                    rows: visibleGa4KeyEventRows(report.ga4.events),
-                    columns: [
-                      ["event_name", "Conversie"],
-                      ["key_events", "Total conversii"]
-                    ]
-                  }
-                ]}
+                metaActionColumns={metaActionColumns}
+                metaLabels={metaLabels}
+                report={report}
               />
-            </>
-          </PlatformSection>
-        ) : null}
-
-        {report?.meta ? (
-          <PlatformSection
-            copy={copy}
-            sourceKey="meta"
-            status={report.sources.meta}
-            title={copy.meta}
-          >
-            <>
-              <ChartBlock title={copy.daily}>
-                <ResponsiveContainer height={280} width="100%">
-                  <LineChart data={report.meta.daily}>
-                    <CartesianGrid stroke="#e2e8f0" />
-                    <XAxis
-                      dataKey="date"
-                      minTickGap={24}
-                      tickFormatter={(date) => formatShortDate(String(date), locale)}
-                    />
-                    <YAxis />
-                    <Tooltip
-                      labelFormatter={(date) => formatFriendlyDate(String(date), locale)}
-                    />
-                    <Legend />
-                    <Line dataKey="spend" name={copy.totalSpend} stroke="#1c435e" />
-                    <Line dataKey="link_clicks" name="Clickuri" stroke="#0f766e" />
-                    <Line dataKey="leads" name={metaLabels.primary} stroke="#b45309" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartBlock>
-              <DataGrid
-                currency={currency}
-                blocks={[
-                  {
-                    title: copy.campaigns,
-                    rows: report.meta.campaigns,
-                    columns: metaCampaignColumns
-                  },
-                  {
-                    title: copy.actions,
-                    rows: report.meta.actions,
-                    columns: metaActionColumns
-                  }
-                ]}
-              />
-            </>
-          </PlatformSection>
+            </DetailAccordion>
+            <DetailAccordion
+              subtitle={copy.detailWebsiteSubtitle}
+              title={copy.detailWebsiteTitle}
+            >
+              <WebsiteDetails copy={copy} currency={currency} report={report} />
+            </DetailAccordion>
+            <DetailAccordion
+              subtitle={copy.detailTrackingSubtitle}
+              title={copy.detailTrackingTitle}
+            >
+              <SourceStatusSection copy={copy} report={report} />
+            </DetailAccordion>
+          </div>
         ) : null}
 
         {report ? (
@@ -625,8 +558,6 @@ export function ReportDashboard({
             {copy.attribution}
           </p>
         ) : null}
-
-        {report ? <SourceStatusSection copy={copy} report={report} /> : null}
       </div>
     </main>
   );
@@ -777,317 +708,513 @@ function ExecutiveSummary({
   );
 }
 
-type MetricIcon = "gads" | "ga4" | "meta";
+function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportResponse }) {
+  const currency = report.client.currency;
+  const paid = report.ownerOverview.paid;
+  const website = report.ownerOverview.website;
+  const items = [
+    {
+      label: copy.totalMediaCost,
+      value: formatCurrency(paid.totalSpend, currency),
+      description: copy.investedBudgetHelp
+    },
+    {
+      label: copy.conversionActions,
+      value: formatNumber(paid.totalConversions),
+      description: copy.platformConversionsHelp
+    },
+    {
+      label: copy.totalCostPerConversion,
+      value: formatCurrency(paid.costPerConversion, currency),
+      description: copy.costPerConversionHelp
+    },
+    {
+      label: copy.websiteTotalTraffic,
+      value: formatNumber(website.sessions),
+      description: copy.websiteTrafficHelp
+    },
+    {
+      label: copy.websiteTotalConversions,
+      value: formatNumber(website.conversions),
+      description: copy.websiteConversionsHelp
+    }
+  ];
 
-type PaidPerformanceRow = {
-  key: "googleAds" | "meta";
-  label: string;
-  tone: "google" | "meta";
-  spend: number;
-  conversions: number;
-  clicks: number;
-  costPerConversion: number;
-  details: ConversionDetail[];
-};
+  return (
+    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      {items.map((item) => (
+        <div
+          className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft"
+          key={item.label}
+        >
+          <p className="text-sm font-semibold text-slate-600">{item.label}</p>
+          <p className="mt-3 text-3xl font-semibold text-slate-950">{item.value}</p>
+          <p className="mt-3 text-sm leading-6 text-slate-500">{item.description}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
 
-type ConversionDetail = {
-  key: string;
-  label: string;
-  conversions: number;
-  allConversions?: number;
-  value?: number;
-  costPerConversion?: number;
-  actionType?: string;
-};
-
-function OwnerOverviewSection({
+function ChannelComparisonSection({
   copy,
   report
 }: {
   copy: typeof ro;
   report: ReportResponse;
 }) {
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const currency = report.client.currency;
-  const platformRows = paidPerformanceRows(report);
-  const paid = report.ownerOverview.paid;
-  const website = report.ownerOverview.website;
-  const isEcommerceReport = report.client.reportType === "ecommerce";
-  const metricItems = [
-    [copy.totalMediaCost, formatCurrency(paid.totalSpend, currency)],
-    [copy.totalPlatformConversions, formatNumber(paid.totalConversions)],
-    [copy.totalCostPerConversion, formatCurrency(paid.costPerConversion, currency)],
-    [copy.websiteTotalTraffic, formatNumber(website.sessions)],
-    [copy.websiteTotalConversions, formatNumber(website.conversions)],
-    ...(isEcommerceReport
-      ? [
-          [copy.websiteRevenue, formatCurrency(website.revenue, currency)],
-          [copy.platformConversionValue, formatCurrency(paid.conversionValue, currency)],
-          [copy.totalRoas, formatNumber(paid.roas)]
-        ]
-      : [])
-  ];
-
-  function toggleRow(key: string) {
-    setExpandedRows((current) => ({ ...current, [key]: !current[key] }));
-  }
+  const rows = channelComparisonRows(report, copy);
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-soft">
-      <div className="border-b border-slate-200 px-5 py-4">
-        <p className="text-sm font-semibold uppercase tracking-wide text-digital">
-          {copy.ownerOverview}
-        </p>
-        <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-          {copy.resultsProduced}
-        </h2>
-        <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">
-          {report.ownerOverview.narrative}
-        </p>
-        <p className="mt-1 text-xs text-slate-500">{copy.ownerOverviewHint}</p>
-      </div>
-      <div className="p-5">
-        <div className="overflow-hidden rounded-md border border-slate-200">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">{copy.platform}</th>
-                  <th className="px-4 py-3">{copy.cost}</th>
-                  <th className="px-4 py-3">{copy.conversions}</th>
-                  <th className="px-4 py-3">{copy.clicks}</th>
-                  <th className="px-4 py-3">{copy.costPerConversion}</th>
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+      <h2 className="text-lg font-semibold text-slate-950">
+        {copy.channelComparison}
+      </h2>
+      <div className="mt-4 overflow-hidden rounded-md border border-slate-200">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-4 py-3">{copy.channel}</th>
+                <th className="px-4 py-3">{copy.campaignRole}</th>
+                <th className="px-4 py-3">{copy.mainResult}</th>
+                <th className="px-4 py-3">{copy.interpretation}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map((row) => (
+                <tr className="align-top" key={row.channel}>
+                  <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-950">
+                    {row.channel}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">{row.role}</td>
+                  <td className="px-4 py-3 text-slate-700">{row.result}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.interpretation}</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {platformRows.length ? (
-                  platformRows.map((row) => {
-                    const isExpanded = Boolean(expandedRows[row.key]);
-                    const canExpand = row.details.length > 0;
-
-                    return (
-                      <Fragment key={row.key}>
-                        <tr className="align-middle">
-                          <td className="whitespace-nowrap px-4 py-3">
-                            <button
-                              className="focus-ring flex items-center gap-2 rounded-md text-left font-semibold text-slate-950 disabled:cursor-default disabled:opacity-100"
-                              disabled={!canExpand}
-                              onClick={() => toggleRow(row.key)}
-                              type="button"
-                            >
-                              <ChevronDown
-                                aria-hidden="true"
-                                className={`h-4 w-4 text-slate-400 transition ${
-                                  isExpanded ? "rotate-180" : ""
-                                } ${canExpand ? "" : "opacity-0"}`}
-                              />
-                              <BrandBadge
-                                compact
-                                label={row.key === "googleAds" ? "GAds" : "Meta"}
-                                tone={row.tone}
-                              />
-                              {row.label}
-                            </button>
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-950">
-                            {formatCurrency(row.spend, currency)}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3">
-                            {formatNumber(row.conversions)}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3">
-                            {formatNumber(row.clicks)}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3">
-                            {formatCurrency(row.costPerConversion, currency)}
-                          </td>
-                        </tr>
-                        {isExpanded ? (
-                          <tr>
-                            <td className="bg-slate-50 px-4 py-4" colSpan={5}>
-                              <ConversionDetailsTable
-                                attributionLabel={
-                                  row.key === "meta" &&
-                                  report.meta?.attributionWindow === "1d_click"
-                                    ? copy.metaAttributionWindow
-                                    : undefined
-                                }
-                                copy={copy}
-                                currency={currency}
-                                details={row.details}
-                              />
-                            </td>
-                          </tr>
-                        ) : null}
-                      </Fragment>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td className="px-4 py-8 text-center text-slate-500" colSpan={5}>
-                      {copy.noPaidSources}
-                    </td>
-                  </tr>
-                )}
-                {platformRows.length ? (
-                  <tr className="bg-slate-50 font-semibold text-slate-950">
-                    <td className="whitespace-nowrap px-4 py-3">{copy.total}</td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      {formatCurrency(paid.totalSpend, currency)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      {formatNumber(paid.totalConversions)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      {formatNumber(paid.totalClicks)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      {formatCurrency(paid.costPerConversion, currency)}
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-4 border-t border-slate-200 pt-5 sm:grid-cols-2 xl:grid-cols-4">
-          {metricItems.map(([label, value]) => (
-            <div key={label}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {label}
-              </p>
-              <p className="mt-1 text-xl font-semibold text-slate-950">{value}</p>
-            </div>
-          ))}
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
   );
 }
 
-function paidPerformanceRows(report: ReportResponse): PaidPerformanceRow[] {
-  return report.ownerOverview.platforms.map((platform) => ({
-    key: platform.key,
-    label: platform.label,
-    tone: platform.key === "googleAds" ? "google" : "meta",
-    spend: platform.spend,
-    conversions: platform.conversions,
-    clicks: platform.clicks,
-    costPerConversion: platform.costPerConversion,
-    details:
-      platform.key === "googleAds"
-        ? googleConversionDetails(report)
-        : metaConversionDetails(report)
-  }));
-}
+function OwnerTrendChart({ copy, report }: { copy: typeof ro; report: ReportResponse }) {
+  const rows = ownerTrendRows(report);
 
-function googleConversionDetails(report: ReportResponse): ConversionDetail[] {
-  return visibleConversionRows(report.googleAds?.conversions ?? []).map((row) => ({
-    key: String(row.conversion_action_name),
-    label: String(row.conversion_action_name ?? "Conversion"),
-    conversions: Number(row.conversions ?? 0),
-    allConversions: Number(row.all_conversions ?? 0),
-    value: Number(row.conversion_value ?? 0)
-  }));
-}
-
-function metaConversionDetails(report: ReportResponse): ConversionDetail[] {
-  return (report.meta?.actions ?? [])
-    .filter((row) => {
-      const value = Number(row.value ?? 0);
-      const isPrimary = row.is_primary === undefined || Number(row.is_primary) > 0;
-
-      return value > 0 && isPrimary;
-    })
-    .map((row) => ({
-      key: String(row.action_type ?? row.action_name),
-      label: metaActionLabel(row, report.client.locale),
-      conversions: Number(row.value ?? 0),
-      value: Number(row.action_value ?? 0),
-      costPerConversion: Number(row.cost_per_action ?? 0),
-      actionType: String(row.action_type ?? "")
-    }));
-}
-
-function metaActionLabel(
-  row: Record<string, string | number>,
-  locale: "ro" | "en"
-) {
-  const actionType = String(row.action_type ?? "");
-
-  if (actionType.toLowerCase().includes("fb_pixel_custom")) {
-    return locale === "en" ? "Custom event" : "Eveniment custom";
-  }
-
-  return String(row.action_name ?? row.action_type ?? "Action");
-}
-
-function ConversionDetailsTable({
-  attributionLabel,
-  copy,
-  currency,
-  details
-}: {
-  attributionLabel?: string;
-  copy: typeof ro;
-  currency: string;
-  details: ConversionDetail[];
-}) {
-  if (!details.length) {
-    return <p className="text-sm text-slate-500">{copy.noConversionBreakdown}</p>;
+  if (!rows.length) {
+    return null;
   }
 
   return (
-    <div>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {copy.conversionBreakdown}
-      </p>
-      {attributionLabel ? (
-        <p className="mb-3 text-xs font-medium text-slate-500">{attributionLabel}</p>
-      ) : null}
-      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-white text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-3 py-2">{copy.conversions}</th>
-              <th className="px-3 py-2">{copy.total}</th>
-              <th className="px-3 py-2">{copy.costPerConversion}</th>
-              <th className="px-3 py-2">{copy.platformValue}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {details.map((detail) => (
-              <tr key={detail.key}>
-                <td className="px-3 py-2">
-                  <div className="font-medium text-slate-950">{detail.label}</div>
-                  {detail.actionType && detail.actionType !== detail.label ? (
-                    <div className="mt-0.5 text-xs text-slate-500">
-                      {detail.actionType}
-                    </div>
-                  ) : null}
-                </td>
-                <td className="whitespace-nowrap px-3 py-2">
-                  {formatNumber(detail.conversions)}
-                  {detail.allConversions && detail.allConversions !== detail.conversions ? (
-                      <span className="ml-2 text-xs text-slate-500">
-                      {copy.allConversionsShort} {formatNumber(detail.allConversions)}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="whitespace-nowrap px-3 py-2">
-                  {detail.costPerConversion !== undefined
-                    ? formatCurrency(detail.costPerConversion, currency)
-                    : "-"}
-                </td>
-                <td className="whitespace-nowrap px-3 py-2">
-                  {detail.value ? formatCurrency(detail.value, currency) : "-"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+      <h2 className="text-lg font-semibold text-slate-950">{copy.mainChartTitle}</h2>
+      <div className="mt-4">
+        <ResponsiveContainer height={300} width="100%">
+          <LineChart data={rows}>
+            <CartesianGrid stroke="#e2e8f0" />
+            <XAxis
+              dataKey="date"
+              minTickGap={24}
+              tickFormatter={(date) => formatShortDate(String(date), report.client.locale)}
+            />
+            <YAxis yAxisId="traffic" />
+            <YAxis orientation="right" yAxisId="conversions" />
+            <Tooltip
+              labelFormatter={(date) =>
+                formatFriendlyDate(String(date), report.client.locale)
+              }
+            />
+            <Legend />
+            <Line
+              dataKey="website_sessions"
+              name={copy.websiteTotalTraffic}
+              stroke="#1c435e"
+              strokeWidth={2}
+              yAxisId="traffic"
+            />
+            <Line
+              dataKey="platform_conversions"
+              name={copy.conversionActions}
+              stroke="#0f766e"
+              strokeWidth={2}
+              yAxisId="conversions"
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
+    </section>
+  );
+}
+
+function ObservationsSection({
+  copy,
+  report
+}: {
+  copy: typeof ro;
+  report: ReportResponse;
+}) {
+  const observations = [
+    ...(report.automatedInsights?.improved ?? []),
+    ...(report.automatedInsights?.attention ?? [])
+  ].slice(0, 4);
+
+  return (
+    <InsightListSection
+      copy={copy}
+      emptyText={copy.empty}
+      items={observations}
+      title={copy.observations}
+    />
+  );
+}
+
+function OptimizationSection({
+  copy,
+  report
+}: {
+  copy: typeof ro;
+  report: ReportResponse;
+}) {
+  return (
+    <InsightListSection
+      copy={copy}
+      emptyText={copy.empty}
+      items={report.automatedInsights?.nextActions ?? []}
+      title={copy.optimizeNext}
+    />
+  );
+}
+
+function InsightListSection({
+  copy,
+  emptyText,
+  items,
+  title
+}: {
+  copy: typeof ro;
+  emptyText: string;
+  items: AutomatedInsight[];
+  title: string;
+}) {
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {items.length ? (
+          items.map((item) => (
+            <div className="rounded-md border border-slate-200 p-4" key={item.title}>
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${insightDotClass(item.status)}`} />
+                <p className="text-sm font-semibold text-slate-950">{item.title}</p>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.message}</p>
+              <span
+                className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${insightStatusClass(
+                  item.status
+                )}`}
+              >
+                {trendStatusLabel(item.status, copy)}
+              </span>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm leading-6 text-slate-600">{emptyText}</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ConclusionSection({
+  copy,
+  report
+}: {
+  copy: typeof ro;
+  report: ReportResponse;
+}) {
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+      <h2 className="text-lg font-semibold text-slate-950">{copy.finalConclusion}</h2>
+      <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600">
+        {ownerConclusion(report)}
+      </p>
+    </section>
+  );
+}
+
+function DetailAccordion({
+  children,
+  subtitle,
+  title
+}: {
+  children: React.ReactNode;
+  subtitle: string;
+  title: string;
+}) {
+  return (
+    <details className="group rounded-lg border border-slate-200 bg-white shadow-soft">
+      <summary className="focus-ring flex cursor-pointer list-none items-start justify-between gap-4 p-5">
+        <span>
+          <span className="block text-lg font-semibold text-slate-950">{title}</span>
+          <span className="mt-1 block text-sm leading-6 text-slate-600">{subtitle}</span>
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className="mt-1 h-5 w-5 shrink-0 text-slate-400 transition group-open:rotate-180"
+        />
+      </summary>
+      <div className="border-t border-slate-100 p-5">{children}</div>
+    </details>
+  );
+}
+
+function GoogleAdsDetails({
+  copy,
+  currency,
+  isEcommerceReport,
+  report
+}: {
+  copy: typeof ro;
+  currency: string;
+  isEcommerceReport: boolean;
+  report: ReportResponse;
+}) {
+  if (!report.googleAds) {
+    return <DataUnavailable copy={copy} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      <ChartBlock title={copy.daily}>
+        <ResponsiveContainer height={280} width="100%">
+          <LineChart data={report.googleAds.daily}>
+            <CartesianGrid stroke="#e2e8f0" />
+            <XAxis
+              dataKey="date"
+              minTickGap={24}
+              tickFormatter={(date) => formatShortDate(String(date), report.client.locale)}
+            />
+            <YAxis />
+            <Tooltip
+              labelFormatter={(date) =>
+                formatFriendlyDate(String(date), report.client.locale)
+              }
+            />
+            <Legend />
+            <Line dataKey="cost" name={copy.totalSpend} stroke="#1c435e" />
+            <Line dataKey="clicks" name={copy.clicks} stroke="#0f766e" />
+            <Line dataKey="conversions" name={copy.conversions} stroke="#b45309" />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartBlock>
+      <DataGrid
+        currency={currency}
+        blocks={[
+          {
+            title: copy.campaigns,
+            rows: report.googleAds.campaigns,
+            columns: [
+              ["campaign_name", "Campanie"],
+              ["cost", copy.totalSpend, "currency"],
+              ["conversions", copy.conversions],
+              [
+                "cpa",
+                isEcommerceReport ? copy.costPerPurchase : copy.costPerLead,
+                "currency"
+              ],
+              ["clicks", copy.clicks],
+              ...(isEcommerceReport
+                ? [
+                    [
+                      "conversion_value",
+                      copy.platformConversionValue,
+                      "currency"
+                    ] as TableColumn,
+                    ["roas", "ROAS"] as TableColumn
+                  ]
+                : [])
+            ]
+          },
+          {
+            title: copy.conversions,
+            rows: visibleConversionRows(report.googleAds.conversions),
+            columns: [
+              ["conversion_action_name", "Acțiune"],
+              ["conversions", copy.conversions],
+              ["all_conversions", "Toate conversiile"],
+              ["conversion_value", "Valoare", "currency"]
+            ]
+          },
+          {
+            title: copy.locations,
+            rows: visibleLocationRows(report.googleAds.locations),
+            columns: [
+              ["location_name", "Locație"],
+              ["location_type", "Tip"],
+              ["cost", copy.totalSpend, "currency"],
+              ["clicks", copy.clicks],
+              ["conversions", copy.conversions],
+              [
+                "cpa",
+                isEcommerceReport ? copy.costPerPurchase : copy.costPerLead,
+                "currency"
+              ]
+            ]
+          }
+        ]}
+      />
+    </div>
+  );
+}
+
+function MetaAdsDetails({
+  columns,
+  copy,
+  currency,
+  metaActionColumns,
+  metaLabels,
+  report
+}: {
+  columns: TableColumn[];
+  copy: typeof ro;
+  currency: string;
+  metaActionColumns: TableColumn[];
+  metaLabels: {
+    impressions: string;
+    linkClicks: string;
+    primary: string;
+    cost: string;
+    value: string;
+  };
+  report: ReportResponse;
+}) {
+  if (!report.meta) {
+    return <DataUnavailable copy={copy} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      <ChartBlock title={copy.daily}>
+        <ResponsiveContainer height={280} width="100%">
+          <LineChart data={report.meta.daily}>
+            <CartesianGrid stroke="#e2e8f0" />
+            <XAxis
+              dataKey="date"
+              minTickGap={24}
+              tickFormatter={(date) => formatShortDate(String(date), report.client.locale)}
+            />
+            <YAxis />
+            <Tooltip
+              labelFormatter={(date) =>
+                formatFriendlyDate(String(date), report.client.locale)
+              }
+            />
+            <Legend />
+            <Line dataKey="spend" name={copy.totalSpend} stroke="#1c435e" />
+            <Line dataKey="link_clicks" name={copy.clicks} stroke="#0f766e" />
+            <Line dataKey="leads" name={metaLabels.primary} stroke="#b45309" />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartBlock>
+      <DataGrid
+        currency={currency}
+        blocks={[
+          {
+            title: copy.campaigns,
+            rows: report.meta.campaigns,
+            columns
+          },
+          ...metaActionBlocks(report.meta.actions, copy, metaActionColumns)
+        ]}
+      />
+    </div>
+  );
+}
+
+function WebsiteDetails({
+  copy,
+  currency,
+  report
+}: {
+  copy: typeof ro;
+  currency: string;
+  report: ReportResponse;
+}) {
+  if (!report.ga4) {
+    return <DataUnavailable copy={copy} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      <ChartBlock title={copy.daily}>
+        <ResponsiveContainer height={280} width="100%">
+          <BarChart data={report.ga4.daily}>
+            <CartesianGrid stroke="#e2e8f0" />
+            <XAxis
+              dataKey="date"
+              minTickGap={24}
+              tickFormatter={(date) => formatShortDate(String(date), report.client.locale)}
+            />
+            <YAxis />
+            <Tooltip
+              labelFormatter={(date) =>
+                formatFriendlyDate(String(date), report.client.locale)
+              }
+            />
+            <Legend />
+            <Bar dataKey="sessions" fill="#1c435e" name={copy.websiteTotalTraffic} />
+            <Bar
+              dataKey="key_events"
+              fill="#0f766e"
+              name={copy.websiteTotalConversions}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartBlock>
+      <DataGrid
+        currency={currency}
+        blocks={[
+          {
+            title: copy.channels,
+            rows: report.ga4.channels,
+            columns: [
+              ["source_medium", "Sursa / medium"],
+              ["sessions", "Sesiuni"],
+              ["key_events", copy.websiteTotalConversions],
+              ["revenue", "Venit", "currency"]
+            ]
+          },
+          {
+            title: copy.landingPages,
+            rows: friendlyGa4LandingRows(report.ga4.landingPages),
+            columns: [
+              ["landing_page_label", "Pagina"],
+              ["landing_page", "URL"],
+              ["sessions", "Sesiuni"],
+              ["key_events", copy.websiteTotalConversions],
+              ["engagement_rate", "Engagement"]
+            ]
+          },
+          {
+            title: copy.websiteTotalConversions,
+            rows: visibleGa4KeyEventRows(report.ga4.events),
+            columns: [
+              ["event_name", "Conversie"],
+              ["key_events", "Total conversii"]
+            ]
+          }
+        ]}
+      />
+    </div>
+  );
+}
+
+function DataUnavailable({ copy }: { copy: typeof ro }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+      {copy.empty}
     </div>
   );
 }
@@ -1100,12 +1227,9 @@ function SourceStatusSection({
   report: ReportResponse;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+    <div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-950">
-            {copy.sourceStatus}
-          </h2>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
             <Clock3 aria-hidden="true" className="h-4 w-4 text-digital" />
             {copy.lastUpdated}: {formatDateTime(report.lastUpdatedAt, report.client.locale)}
@@ -1135,7 +1259,7 @@ function SourceStatusSection({
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -1153,22 +1277,6 @@ function SourceSummaryIcon({ sourceKey }: { sourceKey: string }) {
   }
 
   return <Globe2 aria-hidden="true" className="h-4 w-4 text-digital" />;
-}
-
-function MetricIconView({ icon }: { icon: MetricIcon }) {
-  if (icon === "gads") {
-    return <BrandBadge label="GAds" tone="google" />;
-  }
-
-  if (icon === "ga4") {
-    return <BrandBadge label="GA4" tone="analytics" />;
-  }
-
-  if (icon === "meta") {
-    return <BrandBadge label="Meta" tone="meta" />;
-  }
-
-  return null;
 }
 
 function BrandBadge({
@@ -1197,101 +1305,6 @@ function BrandBadge({
     >
       {label}
     </span>
-  );
-}
-
-function InsightsSection({
-  copy,
-  report
-}: {
-  copy: typeof ro;
-  report: ReportResponse | null;
-}) {
-  const insights = report?.automatedInsights;
-  const groups: Array<[string, AutomatedInsight[] | undefined]> = [
-    [copy.wentWell, insights?.improved],
-    [copy.attention, insights?.attention],
-    [copy.nextActions, insights?.nextActions]
-  ];
-
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-      <h2 className="text-lg font-semibold text-slate-950">{copy.insights}</h2>
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        {groups.map(([title, items]) => (
-          <div className="rounded-md border border-slate-200 p-4" key={title}>
-            <h3 className="text-sm font-semibold text-digital">{title}</h3>
-            <div className="mt-3 space-y-3">
-              {items?.length ? (
-                items.map((item) => (
-                  <div key={`${title}-${item.title}`}>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`h-2 w-2 rounded-full ${insightDotClass(
-                          item.status
-                        )}`}
-                      />
-                      <p className="text-sm font-semibold text-slate-950">
-                        {item.title}
-                      </p>
-                    </div>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      {item.message}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm leading-6 text-slate-600">{copy.empty}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function PlatformSection({
-  children,
-  copy,
-  sourceKey,
-  status,
-  title
-}: {
-  children: React.ReactNode;
-  copy: typeof ro;
-  sourceKey: "googleAds" | "ga4" | "meta";
-  status?: SourceState;
-  title: string;
-}) {
-  return (
-    <section className="space-y-4 rounded-lg border border-slate-200 bg-white/90 p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <MetricIconView
-              icon={
-                sourceKey === "googleAds"
-                  ? "gads"
-                  : sourceKey === "ga4"
-                    ? "ga4"
-                    : "meta"
-              }
-            />
-            <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
-          </div>
-          {status ? <p className="mt-1 text-sm text-slate-500">{status.message}</p> : null}
-        </div>
-        <span
-          className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
-            status ? statusClass[status.status] : "bg-slate-100 text-slate-600"
-          }`}
-        >
-          {status ? sourceStatusLabel(status.status, copy) : copy.loading}
-        </span>
-      </div>
-      {children}
-    </section>
   );
 }
 
@@ -1420,6 +1433,184 @@ function visibleGa4KeyEventRows(rows: Array<Record<string, string | number>>) {
   return rows
     .filter((row) => Number(row.key_events ?? 0) > 0)
     .sort((first, second) => Number(second.key_events ?? 0) - Number(first.key_events ?? 0));
+}
+
+function formatWebsiteLabel(value: string) {
+  try {
+    return new URL(value).hostname.replace(/^www\./, "");
+  } catch {
+    return value.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "");
+  }
+}
+
+function campaignStatusLabel(report: ReportResponse, copy: typeof ro) {
+  const statuses = Object.values(report.sources).map((source) => source.status);
+  const hasUsefulData = statuses.some((status) =>
+    ["ready", "mock", "empty"].includes(status)
+  );
+  const hasTechnicalIssue = statuses.some((status) =>
+    ["error", "missing_config"].includes(status)
+  );
+
+  if (hasUsefulData && !hasTechnicalIssue) {
+    return copy.statusGood;
+  }
+
+  if (hasUsefulData || hasTechnicalIssue) {
+    return copy.statusPartial;
+  }
+
+  return copy.statusNoData;
+}
+
+function channelComparisonRows(report: ReportResponse, copy: typeof ro) {
+  const currency = report.client.currency;
+  const google = report.ownerOverview.platforms.find(
+    (platform) => platform.key === "googleAds"
+  );
+  const meta = report.ownerOverview.platforms.find((platform) => platform.key === "meta");
+
+  return [
+    {
+      channel: copy.googleAds,
+      role: copy.googleRole,
+      result: google
+        ? `${formatNumber(google.conversions)} ${copy.conversions.toLowerCase()} / ${formatCurrency(
+            google.costPerConversion,
+            currency
+          )}`
+        : copy.empty,
+      interpretation: copy.googleInterpretation
+    },
+    {
+      channel: copy.meta,
+      role: copy.metaRole,
+      result: meta
+        ? `${formatNumber(meta.clicks)} ${copy.clicks.toLowerCase()} / ${formatNumber(
+            meta.conversions
+          )} ${copy.conversions.toLowerCase()}`
+        : copy.empty,
+      interpretation: copy.metaInterpretation
+    },
+    {
+      channel: copy.ga4,
+      role: copy.ga4Role,
+      result: `${formatNumber(report.ownerOverview.website.sessions)} ${copy.websiteTotalTraffic.toLowerCase()} / ${formatNumber(
+        report.ownerOverview.website.conversions
+      )} ${copy.websiteTotalConversions.toLowerCase()}`,
+      interpretation: copy.ga4Interpretation
+    }
+  ];
+}
+
+function ownerTrendRows(report: ReportResponse) {
+  const rows = new Map<
+    string,
+    {
+      date: string;
+      platform_conversions: number;
+      website_sessions: number;
+    }
+  >();
+
+  function ensure(date: string) {
+    const existing = rows.get(date);
+    if (existing) return existing;
+
+    const created = {
+      date,
+      platform_conversions: 0,
+      website_sessions: 0
+    };
+    rows.set(date, created);
+    return created;
+  }
+
+  for (const row of report.googleAds?.daily ?? []) {
+    const date = String(row.date ?? "");
+    if (!date) continue;
+    ensure(date).platform_conversions += Number(row.conversions ?? 0);
+  }
+
+  for (const row of report.meta?.daily ?? []) {
+    const date = String(row.date ?? "");
+    if (!date) continue;
+    ensure(date).platform_conversions += Number(row.leads ?? 0);
+  }
+
+  for (const row of report.ga4?.daily ?? []) {
+    const date = String(row.date ?? "");
+    if (!date) continue;
+    ensure(date).website_sessions += Number(row.sessions ?? 0);
+  }
+
+  return [...rows.values()]
+    .map((row) => ({
+      ...row,
+      platform_conversions: Math.round(row.platform_conversions * 10) / 10
+    }))
+    .sort((first, second) => first.date.localeCompare(second.date));
+}
+
+function ownerConclusion(report: ReportResponse) {
+  const currency = report.client.currency;
+  const paid = report.ownerOverview.paid;
+  const website = report.ownerOverview.website;
+
+  if (report.client.locale === "en") {
+    return `The campaigns invested ${formatCurrency(
+      paid.totalSpend,
+      currency
+    )} and generated ${formatNumber(
+      paid.totalConversions
+    )} relevant platform actions, supported by ${formatNumber(
+      website.sessions
+    )} website visits. The next focus is to move budget and optimization effort toward commercially valuable actions: calls, WhatsApp, forms and bookings, not just traffic volume.`;
+  }
+
+  return `Campaniile au investit ${formatCurrency(
+    paid.totalSpend,
+    currency
+  )} și au generat ${formatNumber(
+    paid.totalConversions
+  )} acțiuni relevante raportate de platforme, susținute de ${formatNumber(
+    website.sessions
+  )} vizite pe site. Următorul focus este optimizarea bugetului către acțiuni cu valoare comercială ridicată: telefon, WhatsApp, formulare și programări, nu doar volum de trafic.`;
+}
+
+function friendlyGa4LandingRows(rows: Array<Record<string, string | number>>) {
+  return rows.map((row) => ({
+    ...row,
+    landing_page_label: friendlyLandingPageLabel(row.landing_page)
+  }));
+}
+
+function metaActionBlocks(
+  rows: Array<Record<string, string | number>>,
+  copy: typeof ro,
+  columns: TableColumn[]
+) {
+  const labels: Record<MetaActionCategory, string> = {
+    conversions: copy.conversionActions,
+    traffic: copy.trafficActions,
+    engagement: copy.engagementActions,
+    other: copy.otherActions
+  };
+  const categories: MetaActionCategory[] = [
+    "conversions",
+    "traffic",
+    "engagement",
+    "other"
+  ];
+
+  return categories.map((category) => ({
+    title: labels[category],
+    rows: rows.filter(
+      (row) =>
+        Number(row.value ?? 0) > 0 && metaActionCategory(row.action_type) === category
+    ),
+    columns
+  }));
 }
 
 function formatNumber(value: number) {

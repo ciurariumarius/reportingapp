@@ -21,6 +21,7 @@ async function main() {
       timezone: "Europe/Bucharest",
       currency: "RON",
       locale: "ro",
+      websiteUrl: "https://digitaldot.ro",
       ga4PropertyId: "properties/123456789",
       metaAdAccountId: "act_123456789",
       googleAdsSheetUrl:
@@ -34,6 +35,7 @@ async function main() {
       timezone: "Europe/Bucharest",
       currency: "RON",
       locale: "ro",
+      websiteUrl: "https://digitaldot.ro",
       ga4PropertyId: "properties/123456789",
       metaAdAccountId: "act_123456789",
       googleAdsSheetUrl:

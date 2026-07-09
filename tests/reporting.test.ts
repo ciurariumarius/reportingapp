@@ -9,6 +9,7 @@ const configuredClient = {
   currency: "RON",
   locale: "ro",
   reportType: "lead",
+  websiteUrl: "https://demo.example",
   logoUrl: null,
   ga4PropertyId: "properties/123",
   metaAdAccountId: "act_123",
@@ -23,6 +24,7 @@ describe("mock report aggregation", () => {
     });
 
     expect(report.sources.googleAds.status).toBe("mock");
+    expect(report.client.websiteUrl).toBe("https://demo.example");
     expect(report.displayPeriod).toBe("01 - 07 Iulie 2026");
     expect(report.lastUpdatedAt).toBeTruthy();
     expect(report.sourceSummary.map((source) => source.key)).toEqual([

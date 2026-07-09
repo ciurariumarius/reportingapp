@@ -25,6 +25,7 @@ type ClientWithSources = Pick<
   | "currency"
   | "locale"
   | "reportType"
+  | "websiteUrl"
   | "logoUrl"
   | "ga4PropertyId"
   | "metaAdAccountId"

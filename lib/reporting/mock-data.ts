@@ -24,6 +24,7 @@ type ClientConfig = Pick<
   | "currency"
   | "locale"
   | "reportType"
+  | "websiteUrl"
   | "logoUrl"
   | "ga4PropertyId"
   | "metaAdAccountId"
@@ -592,7 +593,8 @@ export function buildReportResponse({
       timezone: client.timezone,
       locale,
       reportType,
-      logoUrl: client.logoUrl
+      logoUrl: client.logoUrl,
+      websiteUrl: client.websiteUrl
     },
     dateRange: range,
     displayPeriod: formatFriendlyRange(range, locale),
