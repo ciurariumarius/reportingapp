@@ -1,9 +1,5 @@
 import type { Client } from "@prisma/client";
-import {
-  formatFriendlyRange,
-  getPreviousEquivalentDateRange,
-  type DateRange
-} from "../date-ranges";
+import { formatFriendlyRange, type DateRange } from "../date-ranges";
 import type {
   Ga4Report,
   GoogleAdsReport,
@@ -37,6 +33,10 @@ type SourceResult<T> = {
   report?: T;
 };
 
+type ReportBuildOptions = {
+  comparisonRange?: DateRange | null;
+};
+
 const REPORT_CACHE_TTL_MS = 15 * 60 * 1000;
 const SOURCE_TIMEOUT_MS = 12_000;
 const reportCache = new Map<
@@ -47,13 +47,19 @@ const reportCache = new Map<
   }
 >();
 
-function cacheKey(client: ClientWithSources, range: DateRange) {
+function cacheKey(
+  client: ClientWithSources,
+  range: DateRange,
+  comparisonRange?: DateRange | null
+) {
   return [
     client.slug,
     client.reportType,
     client.logoUrl ?? "",
     range.startDate,
     range.endDate,
+    comparisonRange?.startDate ?? "",
+    comparisonRange?.endDate ?? "",
     client.ga4PropertyId ?? "",
     client.metaAdAccountId ?? "",
     client.googleAdsSheetUrl ?? ""
@@ -117,13 +123,20 @@ async function buildSinglePeriodReport(client: ClientWithSources, range: DateRan
   });
 }
 
-async function buildFreshReport(client: ClientWithSources, range: DateRange) {
-  const comparisonRange = getPreviousEquivalentDateRange(range);
+async function buildFreshReport(
+  client: ClientWithSources,
+  range: DateRange,
+  options: ReportBuildOptions = {}
+) {
   const reportType = client.reportType === "ecommerce" ? "ecommerce" : "lead";
-  const [currentReport, comparisonReport] = await Promise.all([
-    buildSinglePeriodReport(client, range),
-    buildSinglePeriodReport(client, comparisonRange)
-  ]);
+  const currentReport = await buildSinglePeriodReport(client, range);
+
+  if (!options.comparisonRange) {
+    return currentReport;
+  }
+
+  const comparisonRange = options.comparisonRange;
+  const comparisonReport = await buildSinglePeriodReport(client, comparisonRange);
 
   return {
     ...currentReport,
@@ -141,8 +154,12 @@ async function buildFreshReport(client: ClientWithSources, range: DateRange) {
   };
 }
 
-export async function buildReport(client: ClientWithSources, range: DateRange) {
-  const key = cacheKey(client, range);
+export async function buildReport(
+  client: ClientWithSources,
+  range: DateRange,
+  options: ReportBuildOptions = {}
+) {
+  const key = cacheKey(client, range, options.comparisonRange);
   const cached = reportCache.get(key);
   const now = Date.now();
 
@@ -151,7 +168,7 @@ export async function buildReport(client: ClientWithSources, range: DateRange) {
   }
 
   try {
-    const report = await buildFreshReport(client, range);
+    const report = await buildFreshReport(client, range, options);
     reportCache.set(key, {
       expiresAt: now + REPORT_CACHE_TTL_MS,
       report

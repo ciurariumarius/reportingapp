@@ -22,6 +22,7 @@ import {
 import { useEffect, useState } from "react";
 import {
   getDefaultDateRange,
+  getPreviousEquivalentDateRange,
   getPresetDateRange,
   type DatePreset,
   type DateRange
@@ -56,6 +57,9 @@ const ro = {
   statusPartial: "Raport parțial: unele surse necesită verificare",
   statusNoData: "Așteptăm date relevante în perioada selectată",
   comparisonPeriod: "Comparat cu",
+  comparisonToggle: "Activează comparația",
+  comparisonStart: "Start comparație",
+  comparisonEnd: "Final comparație",
   verdict: "Verdict",
   period: "Perioadă",
   yesterday: "Ieri",
@@ -185,6 +189,9 @@ const en: typeof ro = {
   statusPartial: "Partial report: some sources need review",
   statusNoData: "Waiting for relevant data in the selected period",
   comparisonPeriod: "Compared with",
+  comparisonToggle: "Enable comparison",
+  comparisonStart: "Comparison start",
+  comparisonEnd: "Comparison end",
   verdict: "Verdict",
   period: "Period",
   yesterday: "Yesterday",
@@ -317,6 +324,10 @@ export function ReportDashboard({
 }: ReportDashboardProps) {
   const [range, setRange] = useState<DateRange>(getDefaultDateRange());
   const [customRange, setCustomRange] = useState<DateRange>(range);
+  const [comparisonEnabled, setComparisonEnabled] = useState(false);
+  const [comparisonRange, setComparisonRange] = useState<DateRange>(
+    getPreviousEquivalentDateRange(range)
+  );
   const [preset, setPreset] = useState<DatePreset>("last30");
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [error, setError] = useState("");
@@ -328,11 +339,20 @@ export function ReportDashboard({
     const controller = new AbortController();
     setLoading(true);
     setError("");
+    const params = new URLSearchParams({
+      startDate: range.startDate,
+      endDate: range.endDate
+    });
 
-    fetch(
-      `/api/client/${slug}/report?startDate=${range.startDate}&endDate=${range.endDate}`,
-      { signal: controller.signal }
-    )
+    if (comparisonEnabled) {
+      params.set("compare", "true");
+      params.set("comparisonStartDate", comparisonRange.startDate);
+      params.set("comparisonEndDate", comparisonRange.endDate);
+    }
+
+    fetch(`/api/client/${slug}/report?${params.toString()}`, {
+      signal: controller.signal
+    })
       .then(async (response) => {
         const data = await response.json();
 
@@ -350,7 +370,15 @@ export function ReportDashboard({
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [copy.error, range.endDate, range.startDate, slug]);
+  }, [
+    comparisonEnabled,
+    comparisonRange.endDate,
+    comparisonRange.startDate,
+    copy.error,
+    range.endDate,
+    range.startDate,
+    slug
+  ]);
 
   const clientName = report?.client.name ?? initialClientName;
   const currency = report?.client.currency ?? "RON";
@@ -405,11 +433,13 @@ export function ReportDashboard({
     const nextRange = getPresetDateRange(nextPreset);
     setRange(nextRange);
     setCustomRange(nextRange);
+    setComparisonRange(getPreviousEquivalentDateRange(nextRange));
   }
 
   function applyCustomRange() {
     setPreset("custom");
     setRange(customRange);
+    setComparisonRange(getPreviousEquivalentDateRange(customRange));
   }
 
   return (
@@ -449,9 +479,13 @@ export function ReportDashboard({
               </div>
             </div>
             <DateRangeControls
+              comparisonEnabled={comparisonEnabled}
+              comparisonRange={comparisonRange}
               copy={copy}
               customRange={customRange}
               onApplyCustom={applyCustomRange}
+              onComparisonChange={setComparisonRange}
+              onComparisonEnabledChange={setComparisonEnabled}
               onCustomChange={setCustomRange}
               onPreset={choosePreset}
               preset={preset}
@@ -535,17 +569,25 @@ export function ReportDashboard({
 }
 
 function DateRangeControls({
+  comparisonEnabled,
+  comparisonRange,
   copy,
   customRange,
   onApplyCustom,
+  onComparisonChange,
+  onComparisonEnabledChange,
   onCustomChange,
   onPreset,
   preset,
   report
 }: {
+  comparisonEnabled: boolean;
+  comparisonRange: DateRange;
   copy: typeof ro;
   customRange: DateRange;
   onApplyCustom: () => void;
+  onComparisonChange: (range: DateRange) => void;
+  onComparisonEnabledChange: (enabled: boolean) => void;
   onCustomChange: (range: DateRange) => void;
   onPreset: (preset: DatePreset) => void;
   preset: DatePreset;
@@ -613,6 +655,51 @@ function DateRangeControls({
           >
             {copy.apply}
           </button>
+        </div>
+      ) : null}
+      <label className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-200">
+        <input
+          checked={comparisonEnabled}
+          className="h-4 w-4 rounded border-white/30 bg-white/10"
+          onChange={(event) => onComparisonEnabledChange(event.target.checked)}
+          type="checkbox"
+        />
+        {copy.comparisonToggle}
+      </label>
+      {comparisonEnabled ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">
+              {copy.comparisonStart}
+            </span>
+            <input
+              className="focus-ring w-full rounded-md border border-white/20 bg-white px-3 py-2 text-sm text-slate-950"
+              onChange={(event) =>
+                onComparisonChange({
+                  ...comparisonRange,
+                  startDate: event.target.value
+                })
+              }
+              type="date"
+              value={comparisonRange.startDate}
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">
+              {copy.comparisonEnd}
+            </span>
+            <input
+              className="focus-ring w-full rounded-md border border-white/20 bg-white px-3 py-2 text-sm text-slate-950"
+              onChange={(event) =>
+                onComparisonChange({
+                  ...comparisonRange,
+                  endDate: event.target.value
+                })
+              }
+              type="date"
+              value={comparisonRange.endDate}
+            />
+          </label>
         </div>
       ) : null}
       {report ? (

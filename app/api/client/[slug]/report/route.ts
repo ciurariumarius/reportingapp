@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalizeDateRange } from "@/lib/date-ranges";
+import { getPreviousEquivalentDateRange, normalizeDateRange } from "@/lib/date-ranges";
 import { buildReport } from "@/lib/reporting/report-service";
 import { prisma } from "@/lib/prisma";
 
@@ -11,12 +11,26 @@ export async function GET(request: NextRequest, context: RouteContext) {
   const { slug } = await context.params;
   const url = new URL(request.url);
   let dateRange;
+  let comparisonRange = null;
+  const compareEnabled = url.searchParams.get("compare") === "true";
 
   try {
     dateRange = normalizeDateRange({
       startDate: url.searchParams.get("startDate"),
       endDate: url.searchParams.get("endDate")
     });
+
+    if (compareEnabled) {
+      const comparisonStartDate = url.searchParams.get("comparisonStartDate");
+      const comparisonEndDate = url.searchParams.get("comparisonEndDate");
+      comparisonRange =
+        comparisonStartDate || comparisonEndDate
+          ? normalizeDateRange({
+              startDate: comparisonStartDate,
+              endDate: comparisonEndDate
+            })
+          : getPreviousEquivalentDateRange(dateRange);
+    }
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Interval invalid." },
@@ -32,5 +46,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "Clientul nu exista." }, { status: 404 });
   }
 
-  return NextResponse.json(await buildReport(client, dateRange));
+  return NextResponse.json(
+    await buildReport(client, dateRange, {
+      comparisonRange
+    })
+  );
 }

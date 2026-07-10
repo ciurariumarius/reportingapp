@@ -90,7 +90,7 @@ describe("mock report aggregation", () => {
     expect(report.ownerOverview.paid.roas).toBeGreaterThan(0);
   });
 
-  it("builds comparison and automated insights for the public report contract", async () => {
+  it("does not build comparison by default for the public report contract", async () => {
     const report = await buildReport(
       {
         ...configuredClient,
@@ -101,6 +101,35 @@ describe("mock report aggregation", () => {
       {
         startDate: "2026-07-01",
         endDate: "2026-07-07"
+      }
+    );
+
+    expect(report.comparisonRange).toBeUndefined();
+    expect(report.displayComparisonPeriod).toBeUndefined();
+    expect(report.comparison).toBeUndefined();
+    expect(report.automatedInsights).toBeUndefined();
+    expect(report.sources.googleAds.status).toBe("missing_config");
+    expect(report.googleAds).toBeUndefined();
+    expect("insights" in report).toBe(false);
+  });
+
+  it("builds comparison and automated insights when comparison range is requested", async () => {
+    const report = await buildReport(
+      {
+        ...configuredClient,
+        ga4PropertyId: null,
+        metaAdAccountId: null,
+        googleAdsSheetUrl: null
+      },
+      {
+        startDate: "2026-07-01",
+        endDate: "2026-07-07"
+      },
+      {
+        comparisonRange: {
+          startDate: "2026-06-24",
+          endDate: "2026-06-30"
+        }
       }
     );
 
