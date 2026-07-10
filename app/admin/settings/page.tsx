@@ -38,6 +38,10 @@ function settingDisplay(settings: SettingSnapshotItem[], key: SettingSnapshotIte
   return displayValue === "Lipsa" ? "" : displayValue || "";
 }
 
+function settingConfigured(settings: SettingSnapshotItem[], key: SettingSnapshotItem["key"]) {
+  return Boolean(settings.find((setting) => setting.key === key)?.configured);
+}
+
 export default async function AdminSettingsPage() {
   await requireAdminPage();
 
@@ -55,7 +59,10 @@ export default async function AdminSettingsPage() {
       settings.find((setting) => setting.key === "META_API_VERSION")?.displayValue ||
       "v23.0",
     metaAppId: settingDisplay(settings, "META_APP_ID"),
-    ga4ClientEmail: settingDisplay(settings, "GA4_CLIENT_EMAIL")
+    ga4ClientEmail: settingDisplay(settings, "GA4_CLIENT_EMAIL"),
+    metaAccessTokenConfigured: settingConfigured(settings, "META_ACCESS_TOKEN"),
+    metaAppSecretConfigured: settingConfigured(settings, "META_APP_SECRET"),
+    ga4PrivateKeyConfigured: settingConfigured(settings, "GA4_PRIVATE_KEY")
   };
 
   return (

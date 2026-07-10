@@ -10,6 +10,9 @@ type AdminSettingsFormProps = {
     metaApiVersion: string;
     metaAppId: string;
     ga4ClientEmail: string;
+    metaAccessTokenConfigured: boolean;
+    metaAppSecretConfigured: boolean;
+    ga4PrivateKeyConfigured: boolean;
   };
 };
 
@@ -184,7 +187,8 @@ export function AdminSettingsForm({ initialValue }: AdminSettingsFormProps) {
           value={metaAppId}
         />
         <SecretField
-          help="Token System User cu ads_read. Lasa gol ca sa pastrezi valoarea curenta."
+          configured={initialValue.metaAccessTokenConfigured}
+          help="Token System User cu ads_read. Completeaza doar ca sa inlocuiesti valoarea curenta."
           label="Meta access token"
           onChange={setMetaAccessToken}
           placeholder="EA..."
@@ -192,13 +196,18 @@ export function AdminSettingsForm({ initialValue }: AdminSettingsFormProps) {
         />
         <div>
           <SecretField
-            help="Optional. Lasa gol ca sa pastrezi valoarea curenta."
+            configured={initialValue.metaAppSecretConfigured && !clearMetaAppSecret}
+            help={
+              clearMetaAppSecret
+                ? "Secretul salvat va fi sters dupa salvare."
+                : "Optional. Completeaza doar ca sa inlocuiesti valoarea curenta."
+            }
             label="Meta app secret"
             onChange={(next) => {
               setMetaAppSecret(next);
               if (next) setClearMetaAppSecret(false);
             }}
-            placeholder="App secret"
+            placeholder={clearMetaAppSecret ? "Va fi sters la salvare" : "App secret"}
             value={metaAppSecret}
           />
           <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
@@ -242,7 +251,8 @@ export function AdminSettingsForm({ initialValue }: AdminSettingsFormProps) {
           value={ga4ClientEmail}
         />
         <TextareaField
-          help="Accepta cheia cu newline real sau cu \\n. Lasa gol ca sa pastrezi valoarea curenta."
+          configured={initialValue.ga4PrivateKeyConfigured}
+          help="Accepta cheia cu newline real sau cu \\n. Completeaza doar ca sa inlocuiesti valoarea curenta."
           label="GA4 private key"
           onChange={setGa4PrivateKey}
           placeholder="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----"
@@ -339,54 +349,93 @@ function TextField({
 }
 
 function SecretField(props: {
+  configured?: boolean;
   help?: string;
   label: string;
   onChange: (value: string) => void;
   placeholder?: string;
   value: string;
 }) {
+  const showingSavedValue = Boolean(props.configured && !props.value);
+  const placeholder = showingSavedValue ? "****************" : props.placeholder;
+  const help = showingSavedValue
+    ? "Valoare salvata. Completeaza campul doar daca vrei sa o inlocuiesti."
+    : props.help;
+
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-medium text-slate-700">{props.label}</span>
       <input
         autoComplete="off"
-        className="focus-ring w-full rounded-md border border-slate-300 px-3 py-2"
+        className={[
+          "focus-ring w-full rounded-md border border-slate-300 px-3 py-2",
+          showingSavedValue ? "placeholder:text-slate-700" : ""
+        ].join(" ")}
         onChange={(event) => props.onChange(event.target.value)}
-        placeholder={props.placeholder}
+        placeholder={placeholder}
         type="password"
         value={props.value}
       />
-      {props.help ? (
-        <span className="mt-1 block text-xs text-slate-500">{props.help}</span>
+      {help ? (
+        <span
+          className={[
+            "mt-1 block text-xs",
+            showingSavedValue ? "font-medium text-emerald-700" : "text-slate-500"
+          ].join(" ")}
+        >
+          {help}
+        </span>
       ) : null}
     </label>
   );
 }
 
 function TextareaField({
+  configured,
   help,
   label,
   onChange,
   placeholder,
   value
 }: {
+  configured?: boolean;
   help?: string;
   label: string;
   onChange: (value: string) => void;
   placeholder?: string;
   value: string;
 }) {
+  const showingSavedValue = Boolean(configured && !value);
+  const effectivePlaceholder = showingSavedValue
+    ? "-----BEGIN PRIVATE KEY-----\\n****************\\n-----END PRIVATE KEY-----"
+    : placeholder;
+  const effectiveHelp = showingSavedValue
+    ? "Valoare salvata. Completeaza campul doar daca vrei sa o inlocuiesti."
+    : help;
+
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
       <textarea
         autoComplete="off"
-        className="focus-ring min-h-28 w-full rounded-md border border-slate-300 px-3 py-2"
+        className={[
+          "focus-ring min-h-28 w-full rounded-md border border-slate-300 px-3 py-2",
+          showingSavedValue ? "placeholder:text-slate-700" : ""
+        ].join(" ")}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
+        placeholder={effectivePlaceholder}
         value={value}
       />
-      {help ? <span className="mt-1 block text-xs text-slate-500">{help}</span> : null}
+      {effectiveHelp ? (
+        <span
+          className={[
+            "mt-1 block text-xs",
+            showingSavedValue ? "font-medium text-emerald-700" : "text-slate-500"
+          ].join(" ")}
+        >
+          {effectiveHelp}
+        </span>
+      ) : null}
     </label>
   );
 }
