@@ -96,6 +96,8 @@ const ro = {
   googleOwnerTitle: "Google Ads pe scurt",
   googleOwnerSubtitle:
     "Cost, clickuri și conversii din campaniile Google Ads în perioada selectată.",
+  googleStaleData:
+    "Datele Google Ads din Sheet ajung doar până la {date}. Rulează Google Ads Script ca să actualizezi toată perioada selectată.",
   metaOwnerTitle: "Facebook Ads pe scurt",
   metaOwnerSubtitle:
     "Cost, clickuri și acțiuni/conversii din campaniile Facebook Ads în perioada selectată.",
@@ -240,6 +242,8 @@ const en: typeof ro = {
   googleOwnerTitle: "Google Ads at a glance",
   googleOwnerSubtitle:
     "Cost, clicks and conversions from Google Ads campaigns in the selected period.",
+  googleStaleData:
+    "Google Ads Sheet data is available only through {date}. Run the Google Ads Script to refresh the full selected period.",
   metaOwnerTitle: "Facebook Ads at a glance",
   metaOwnerSubtitle:
     "Cost, clicks and actions/conversions from Facebook Ads campaigns in the selected period.",
@@ -832,11 +836,18 @@ function OwnerAdsChannelSections({
   metaActionColumns: TableColumn[];
   report: ReportResponse;
 }) {
+  const googleCoverageNotice = googleAdsCoverageNotice(report, copy);
+
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold text-slate-950">
         {copy.adsChannelBreakdown}
       </h2>
+      {googleCoverageNotice ? (
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
+          {googleCoverageNotice}
+        </p>
+      ) : null}
       <div className="grid gap-4 xl:grid-cols-2">
         <OwnerAdsChannelCard
           campaignColumns={[
@@ -1676,6 +1687,23 @@ function ownerMetaConversionRows(rows: Array<Record<string, string | number>>) {
         Number(row.value ?? 0) > 0 && metaActionCategory(row.action_type) === "conversions"
     )
     .sort((first, second) => Number(second.value ?? 0) - Number(first.value ?? 0));
+}
+
+function googleAdsCoverageNotice(report: ReportResponse, copy: typeof ro) {
+  const dates = (report.googleAds?.daily ?? [])
+    .map((row) => String(row.date ?? ""))
+    .filter(Boolean)
+    .sort();
+  const latestDate = dates.at(-1);
+
+  if (!latestDate || latestDate >= report.dateRange.endDate) {
+    return null;
+  }
+
+  return copy.googleStaleData.replace(
+    "{date}",
+    formatFriendlyDate(latestDate, report.client.locale)
+  );
 }
 
 function visibleLocationRows(rows: Array<Record<string, string | number>>) {

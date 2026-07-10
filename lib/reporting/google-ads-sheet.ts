@@ -397,6 +397,20 @@ function buildKpis(daily: Array<Record<string, string | number>>): PlatformKpis 
   };
 }
 
+function coverageMessage(daily: Array<Record<string, string | number>>, range: DateRange) {
+  const latestDate = daily
+    .map((row) => String(row.date ?? ""))
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+
+  if (latestDate && latestDate < range.endDate) {
+    return `Date Google Ads live din Google Sheet. Atentie: Sheetul are date doar pana la ${latestDate}, iar perioada selectata se termina la ${range.endDate}. Ruleaza Google Ads Script pentru actualizare.`;
+  }
+
+  return "Date Google Ads live din Google Sheet.";
+}
+
 export async function fetchGoogleAdsSheetReport(
   sheetUrl: string | null,
   range: DateRange
@@ -436,7 +450,7 @@ export async function fetchGoogleAdsSheetReport(
     return {
       state: {
         status: "ready",
-        message: "Date Google Ads live din Google Sheet."
+        message: coverageMessage(daily, range)
       },
       report: {
         kpis: buildKpis(daily),
