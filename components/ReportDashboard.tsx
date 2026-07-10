@@ -45,17 +45,13 @@ type ReportDashboardProps = {
 };
 
 const ro = {
-  report: "Raport de performanță",
   direction: "Marketing cu direcție",
-  clarityLine: "Strategie clară. Execuție impecabilă. Rezultate măsurabile.",
-  performanceSummary: "Direcția perioadei",
   executiveSummary: "Rezumat executiv",
   budgetDirection: "Unde s-a dus bugetul",
   resultsProduced: "Ce rezultate a produs",
   ownerOverview: "Overview pentru owner",
   ownerOverviewHint: "Indicatorii principali pentru decizii rapide de business.",
   clientWebsite: "Website",
-  campaignStatus: "Status",
   statusGood: "Campaniile sunt active și generează date utile",
   statusPartial: "Raport parțial: unele surse necesită verificare",
   statusNoData: "Așteptăm date relevante în perioada selectată",
@@ -173,17 +169,13 @@ const ro = {
 };
 
 const en: typeof ro = {
-  report: "Performance report",
   direction: "Marketing with direction",
-  clarityLine: "Clear strategy. Sharp execution. Measurable results.",
-  performanceSummary: "Period direction",
   executiveSummary: "Executive summary",
   budgetDirection: "Where the budget went",
   resultsProduced: "What it produced",
   ownerOverview: "Owner overview",
   ownerOverviewHint: "The main indicators for fast business decisions.",
   clientWebsite: "Website",
-  campaignStatus: "Status",
   statusGood: "Campaigns are active and producing useful data",
   statusPartial: "Partial report: some sources need review",
   statusNoData: "Waiting for relevant data in the selected period",
@@ -354,8 +346,6 @@ export function ReportDashboard({
   const currency = report?.client.currency ?? "RON";
   const reportType = report?.client.reportType ?? "lead";
   const isEcommerceReport = reportType === "ecommerce";
-  const websiteUrl = report?.client.websiteUrl;
-  const campaignStatus = report ? campaignStatusLabel(report, copy) : null;
   const metaLabels =
     locale === "en"
       ? {
@@ -447,32 +437,6 @@ export function ReportDashboard({
                   {clientName}
                 </h1>
               </div>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300">
-                {copy.report}
-              </p>
-              <p className="mt-4 max-w-2xl text-sm font-medium text-[#e5d5b8]">
-                {copy.clarityLine}
-              </p>
-              {report ? (
-                <div className="mt-5 flex flex-wrap gap-2 text-sm">
-                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-slate-100">
-                    {copy.period}: {report.displayPeriod}
-                  </span>
-                  {websiteUrl ? (
-                    <a
-                      className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-slate-100 hover:border-[#8fd8ce]"
-                      href={websiteUrl}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      {copy.clientWebsite}: {formatWebsiteLabel(websiteUrl)}
-                    </a>
-                  ) : null}
-                  <span className="rounded-full border border-[#8fd8ce]/40 bg-[#8fd8ce]/15 px-3 py-1.5 text-[#d8fbf5]">
-                    {copy.campaignStatus}: {campaignStatus}
-                  </span>
-                </div>
-              ) : null}
             </div>
             <DateRangeControls
               copy={copy}
@@ -481,6 +445,7 @@ export function ReportDashboard({
               onCustomChange={setCustomRange}
               onPreset={choosePreset}
               preset={preset}
+              report={report}
             />
           </div>
         </div>
@@ -497,10 +462,6 @@ export function ReportDashboard({
           <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-soft">
             {copy.loading}
           </div>
-        ) : null}
-
-        {report ? (
-          <ExecutiveSummary copy={copy} report={report} />
         ) : null}
 
         {report ? <OwnerKpiCards copy={copy} report={report} /> : null}
@@ -569,7 +530,8 @@ function DateRangeControls({
   onApplyCustom,
   onCustomChange,
   onPreset,
-  preset
+  preset,
+  report
 }: {
   copy: typeof ro;
   customRange: DateRange;
@@ -577,6 +539,7 @@ function DateRangeControls({
   onCustomChange: (range: DateRange) => void;
   onPreset: (preset: DatePreset) => void;
   preset: DatePreset;
+  report: ReportResponse | null;
 }) {
   const presets: Array<[DatePreset, string]> = [
     ["yesterday", copy.yesterday],
@@ -642,69 +605,24 @@ function DateRangeControls({
           </button>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function ExecutiveSummary({
-  copy,
-  report
-}: {
-  copy: typeof ro;
-  report: ReportResponse;
-}) {
-  const verdict = report.automatedInsights?.verdict;
-
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-digital">
-            {copy.performanceSummary}
+      {report ? (
+        <div className="mt-3 rounded-md border border-white/15 bg-white/[0.06] px-3 py-2 text-sm leading-6 text-slate-200">
+          <p>
+            <span className="font-semibold text-white">{copy.period}: </span>
+            {report.displayPeriod}
           </p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-            {verdict?.title ?? copy.verdict}
-          </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            {verdict?.message ?? copy.empty}
-          </p>
+          {report.comparisonRange ? (
+            <p>
+              <span className="font-semibold text-white">
+                {copy.comparisonPeriod}:{" "}
+              </span>
+              {report.displayComparisonPeriod ??
+                formatRange(report.comparisonRange, report.client.locale)}
+            </p>
+          ) : null}
         </div>
-        <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          <div className="flex gap-3">
-            <CalendarDays
-              aria-hidden="true"
-              className="mt-0.5 h-4 w-4 shrink-0 text-digital"
-            />
-            <div>
-              <p>
-                <span className="font-semibold text-slate-950">
-                  {copy.period}:{" "}
-                </span>
-                {report.displayPeriod}
-              </p>
-              {report.comparisonRange ? (
-                <p className="mt-1">
-                  <span className="font-semibold text-slate-950">
-                    {copy.comparisonPeriod}:{" "}
-                  </span>
-                  {report.displayComparisonPeriod ??
-                    formatRange(report.comparisonRange, report.client.locale)}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </div>
-      {verdict ? (
-        <span
-          className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${insightStatusClass(
-            verdict.status
-          )}`}
-        >
-          {trendStatusLabel(verdict.status, copy)}
-        </span>
       ) : null}
-    </section>
+    </div>
   );
 }
 
@@ -1433,34 +1351,6 @@ function visibleGa4KeyEventRows(rows: Array<Record<string, string | number>>) {
   return rows
     .filter((row) => Number(row.key_events ?? 0) > 0)
     .sort((first, second) => Number(second.key_events ?? 0) - Number(first.key_events ?? 0));
-}
-
-function formatWebsiteLabel(value: string) {
-  try {
-    return new URL(value).hostname.replace(/^www\./, "");
-  } catch {
-    return value.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "");
-  }
-}
-
-function campaignStatusLabel(report: ReportResponse, copy: typeof ro) {
-  const statuses = Object.values(report.sources).map((source) => source.status);
-  const hasUsefulData = statuses.some((status) =>
-    ["ready", "mock", "empty"].includes(status)
-  );
-  const hasTechnicalIssue = statuses.some((status) =>
-    ["error", "missing_config"].includes(status)
-  );
-
-  if (hasUsefulData && !hasTechnicalIssue) {
-    return copy.statusGood;
-  }
-
-  if (hasUsefulData || hasTechnicalIssue) {
-    return copy.statusPartial;
-  }
-
-  return copy.statusNoData;
 }
 
 function channelComparisonRows(report: ReportResponse, copy: typeof ro) {
