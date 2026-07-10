@@ -158,8 +158,8 @@ export async function fetchGa4Report(
           dateRanges,
           dimensions: [{ name: "eventName" }],
           metrics: [{ name: "eventCount" }, { name: "keyEvents" }],
-          limit: 30,
-          orderBys: [{ metric: { metricName: "eventCount" }, desc: true }]
+          limit: 100,
+          orderBys: [{ metric: { metricName: "keyEvents" }, desc: true }]
         }),
         analyticsClient.runReport({
           property,
