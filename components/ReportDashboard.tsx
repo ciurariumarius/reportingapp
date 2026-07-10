@@ -69,7 +69,7 @@ const ro = {
   totalSpend: "Buget consumat",
   googleAdsCost: "Cost Google Ads",
   metaCost: "Cost Meta",
-  totalMediaCost: "Cost total media",
+  totalMediaCost: "Cost: Google Ads + Facebook Ads",
   totalClicks: "Clickuri totale",
   googleAdsConversions: "Conversii Google Ads",
   metaConversions: "Conversii Meta",
@@ -83,11 +83,16 @@ const ro = {
   conversionBreakdown: "Detalii conversii",
   noConversionBreakdown: "Nu există conversii detaliate pentru această platformă.",
   metaAttributionWindow: "Atribuire Meta: 1 zi click",
-  investedBudgetHelp: "Investiție media în perioada analizată.",
+  investedBudgetHelp: "Investiție cumulată în Google Ads și Facebook Ads.",
   platformConversionsHelp: "Acțiuni urmărite în platformele de promovare.",
   costPerConversionHelp: "Cost mediu pentru o acțiune urmărită.",
-  websiteTrafficHelp: "Trafic generat către website în perioada analizată.",
+  websiteTrafficHelp: "Sesiuni măsurate în GA4 pentru perioada analizată.",
   websiteConversionsHelp: "Acțiuni importante măsurate pe website.",
+  actionsConversionSummary: "Acțiuni / conversii",
+  actionsConversionHelp:
+    "Platformele și GA4 pot atribui diferit, de aceea le afișăm separat.",
+  platformActionsShort: "Platforme",
+  websiteConversionsShort: "Website",
   channelComparison: "Rolul fiecărui canal",
   channel: "Canal",
   campaignRole: "Rol în campanie",
@@ -193,7 +198,7 @@ const en: typeof ro = {
   totalSpend: "Spend",
   googleAdsCost: "Google Ads cost",
   metaCost: "Meta cost",
-  totalMediaCost: "Total media cost",
+  totalMediaCost: "Cost: Google Ads + Facebook Ads",
   totalClicks: "Total clicks",
   googleAdsConversions: "Google Ads conversions",
   metaConversions: "Meta conversions",
@@ -207,11 +212,16 @@ const en: typeof ro = {
   conversionBreakdown: "Conversion details",
   noConversionBreakdown: "No detailed conversions for this platform.",
   metaAttributionWindow: "Meta attribution: 1-day click",
-  investedBudgetHelp: "Media investment in the selected period.",
+  investedBudgetHelp: "Combined investment in Google Ads and Facebook Ads.",
   platformConversionsHelp: "Tracked actions reported by advertising platforms.",
   costPerConversionHelp: "Average cost for one tracked action.",
-  websiteTrafficHelp: "Traffic generated to the website during the period.",
+  websiteTrafficHelp: "Sessions measured in GA4 for the selected period.",
   websiteConversionsHelp: "Important actions measured on the website.",
+  actionsConversionSummary: "Actions / conversions",
+  actionsConversionHelp:
+    "Platforms and GA4 can attribute differently, so they are shown separately.",
+  platformActionsShort: "Platforms",
+  websiteConversionsShort: "Website",
   channelComparison: "Role of each channel",
   channel: "Channel",
   campaignRole: "Campaign role",
@@ -637,29 +647,30 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
       description: copy.investedBudgetHelp
     },
     {
-      label: copy.conversionActions,
-      value: formatNumber(paid.totalConversions),
-      description: copy.platformConversionsHelp
-    },
-    {
-      label: copy.totalCostPerConversion,
-      value: formatCurrency(paid.costPerConversion, currency),
-      description: copy.costPerConversionHelp
-    },
-    {
       label: copy.websiteTotalTraffic,
       value: formatNumber(website.sessions),
       description: copy.websiteTrafficHelp
     },
     {
-      label: copy.websiteTotalConversions,
-      value: formatNumber(website.conversions),
-      description: copy.websiteConversionsHelp
+      label: copy.actionsConversionSummary,
+      value: `${formatNumber(paid.totalConversions)} / ${formatNumber(
+        website.conversions
+      )}`,
+      description: copy.actionsConversionHelp,
+      details: [
+        `${copy.platformActionsShort}: ${formatNumber(paid.totalConversions)}`,
+        `${copy.websiteConversionsShort}: ${formatNumber(website.conversions)}`
+      ]
+    },
+    {
+      label: copy.totalCostPerConversion,
+      value: formatCurrency(paid.costPerConversion, currency),
+      description: copy.costPerConversionHelp
     }
   ];
 
   return (
-    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => (
         <div
           className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft"
@@ -667,6 +678,18 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
         >
           <p className="text-sm font-semibold text-slate-600">{item.label}</p>
           <p className="mt-3 text-3xl font-semibold text-slate-950">{item.value}</p>
+          {"details" in item && item.details?.length ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {item.details.map((detail) => (
+                <span
+                  className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                  key={detail}
+                >
+                  {detail}
+                </span>
+              ))}
+            </div>
+          ) : null}
           <p className="mt-3 text-sm leading-6 text-slate-500">{item.description}</p>
         </div>
       ))}
