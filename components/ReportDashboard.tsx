@@ -102,6 +102,8 @@ const ro = {
   channelCampaignsSummary: "Campanii principale",
   channelConversionsSummary: "Conversii / acțiuni",
   cpc: "CPC",
+  outboundClicks: "Clickuri outbound",
+  landingPageViews: "Landing page views",
   actionsConversionSummary: "Acțiuni / conversii",
   actionsConversionHelp:
     "Platformele și GA4 pot atribui diferit, de aceea le afișăm separat.",
@@ -244,6 +246,8 @@ const en: typeof ro = {
   channelCampaignsSummary: "Main campaigns",
   channelConversionsSummary: "Conversions / actions",
   cpc: "CPC",
+  outboundClicks: "Outbound clicks",
+  landingPageViews: "Landing page views",
   actionsConversionSummary: "Actions / conversions",
   actionsConversionHelp:
     "Platforms and GA4 can attribute differently, so they are shown separately.",
@@ -408,16 +412,16 @@ export function ReportDashboard({
     locale === "en"
       ? {
           impressions: "Impressions",
-          linkClicks: "Link clicks",
+          linkClicks: copy.outboundClicks,
           primary: isEcommerceReport ? "Purchases" : "Leads",
-          cost: isEcommerceReport ? "Cost / purchase" : "Cost / lead",
+          cost: copy.cpc,
           value: "Purchase value"
         }
       : {
           impressions: "Afișări",
-          linkClicks: "Clickuri link",
+          linkClicks: copy.outboundClicks,
           primary: isEcommerceReport ? "Achiziții" : "Leads",
-          cost: isEcommerceReport ? "Cost / achiziție" : "Cost / lead",
+          cost: copy.cpc,
           value: "Valoare achiziții"
   };
   const metaCampaignColumns: TableColumn[] = [
@@ -425,8 +429,9 @@ export function ReportDashboard({
     ["spend", copy.totalSpend, "currency"],
     ["reach", locale === "en" ? "Reach" : "Acoperire"],
     ["link_clicks", metaLabels.linkClicks],
+    ["landing_page_views", copy.landingPageViews],
+    ["cpc", metaLabels.cost, "currency"],
     ["leads", metaLabels.primary],
-    ["cost_per_lead", metaLabels.cost, "currency"],
     ...(isEcommerceReport
       ? [
           ["conversion_value", metaLabels.value, "currency"] as TableColumn,
@@ -875,7 +880,8 @@ function OwnerAdsChannelSections({
           campaignColumns={[
             ["campaign_name", "Campanie"],
             ["spend", copy.cost, "currency"],
-            ["link_clicks", copy.clicks],
+            ["link_clicks", copy.outboundClicks],
+            ["landing_page_views", copy.landingPageViews],
             ["cpc", copy.cpc, "currency"],
             ["leads", copy.conversions],
             ["cost_per_lead", copy.costPerConversion, "currency"],
@@ -897,12 +903,16 @@ function OwnerAdsChannelSections({
               value: formatCurrency(report.meta?.kpis.spend ?? 0, currency)
             },
             {
-              label: copy.clicks,
+              label: copy.outboundClicks,
               value: formatNumber(report.meta?.kpis.clicks ?? 0)
             },
             {
               label: copy.cpc,
               value: formatCurrency(report.meta?.kpis.cpc ?? 0, currency)
+            },
+            {
+              label: copy.landingPageViews,
+              value: formatNumber(report.meta?.kpis.landingPageViews ?? 0)
             },
             {
               label: copy.conversions,
@@ -1348,7 +1358,12 @@ function MetaAdsDetails({
             />
             <Legend />
             <Line dataKey="spend" name={copy.totalSpend} stroke="#1c435e" />
-            <Line dataKey="link_clicks" name={copy.clicks} stroke="#0f766e" />
+            <Line dataKey="link_clicks" name={copy.outboundClicks} stroke="#0f766e" />
+            <Line
+              dataKey="landing_page_views"
+              name={copy.landingPageViews}
+              stroke="#7c3aed"
+            />
             <Line dataKey="leads" name={metaLabels.primary} stroke="#b45309" />
           </LineChart>
         </ResponsiveContainer>

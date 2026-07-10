@@ -33,8 +33,11 @@ type MetaInsightRow = {
   impressions?: string;
   clicks?: string;
   inline_link_clicks?: string;
+  outbound_clicks?: MetaActionMetric[];
+  unique_outbound_clicks?: MetaActionMetric[];
   ctr?: string;
   cpc?: string;
+  cost_per_outbound_click?: MetaActionMetric[];
   actions?: MetaActionMetric[];
   action_values?: MetaActionMetric[];
   cost_per_action_type?: MetaActionMetric[];
@@ -271,6 +274,33 @@ function metricByAction(actions: MetaActionMetric[] | undefined) {
   return map;
 }
 
+function actionMetricValue(
+  actions: MetaActionMetric[] | undefined,
+  preferredTypes: string[] = []
+) {
+  const byAction = metricByAction(actions);
+
+  for (const type of preferredTypes) {
+    const value = byAction.get(type);
+    if (value) {
+      return value;
+    }
+  }
+
+  return [...byAction.values()][0] ?? 0;
+}
+
+function landingPageViews(actions: MetaActionMetric[] | undefined) {
+  return round(
+    [...metricByAction(actions).entries()].reduce((sum, [actionType, value]) => {
+      return actionType.toLowerCase().includes("landing_page_view")
+        ? sum + value
+        : sum;
+    }, 0),
+    2
+  );
+}
+
 function rowSpend(rows: Array<Record<string, string | number>>) {
   return round(rows.reduce((sum, row) => sum + Number(row.spend ?? 0), 0));
 }
@@ -278,8 +308,19 @@ function rowSpend(rows: Array<Record<string, string | number>>) {
 function mapPerformanceRow(row: MetaInsightRow, reportType: ReportType) {
   const spend = round(number(row.spend));
   const impressions = Math.round(number(row.impressions));
-  const linkClicks = Math.round(number(row.inline_link_clicks) || number(row.clicks));
+  const outboundClicks = Math.round(
+    actionMetricValue(row.outbound_clicks, ["outbound_click"]) ||
+      number(row.inline_link_clicks) ||
+      number(row.clicks)
+  );
+  const uniqueOutboundClicks = Math.round(
+    actionMetricValue(row.unique_outbound_clicks, ["outbound_click"])
+  );
+  const costPerOutboundClick =
+    actionMetricValue(row.cost_per_outbound_click, ["outbound_click"]) ||
+    calcCpc(spend, outboundClicks);
   const conversions = sumPrimaryActions(row.actions, reportType);
+  const lpViews = landingPageViews(row.actions);
   const conversionValue =
     reportType === "ecommerce" ? sumPrimaryActions(row.action_values, "ecommerce") : 0;
 
@@ -290,9 +331,12 @@ function mapPerformanceRow(row: MetaInsightRow, reportType: ReportType) {
     spend,
     reach: Math.round(number(row.reach)),
     impressions,
-    link_clicks: linkClicks,
-    ctr: number(row.ctr) ? round(number(row.ctr)) : calcCtr(linkClicks, impressions),
-    cpc: number(row.cpc) ? round(number(row.cpc)) : calcCpc(spend, linkClicks),
+    link_clicks: outboundClicks,
+    outbound_clicks: outboundClicks,
+    unique_outbound_clicks: uniqueOutboundClicks,
+    landing_page_views: lpViews,
+    ctr: calcCtr(outboundClicks, impressions),
+    cpc: round(costPerOutboundClick),
     leads: conversions,
     cost_per_lead: calcCpa(spend, conversions),
     conversion_value: round(conversionValue),
@@ -302,7 +346,7 @@ function mapPerformanceRow(row: MetaInsightRow, reportType: ReportType) {
 
 function customConversionId(actionType: string) {
   return (
-    actionType.match(/(?:custom_conversion|custom)[._]?(\d+)/i)?.[1] ??
+    actionType.match(/(?:custom_conversion|custom)[._]?([a-z0-9_-]+)/i)?.[1] ??
     actionType.match(/(\d{6,})$/)?.[1] ??
     null
   );
@@ -319,6 +363,10 @@ function formatActionName(
   }
 
   if (customId && isCustomConversionAction(actionType.toLowerCase())) {
+    if (!/^\d+$/.test(customId)) {
+      return customId.toUpperCase();
+    }
+
     return `Custom conversion ${customId}`;
   }
 
@@ -381,7 +429,11 @@ function buildKpis(
   const spend = rowSpend(rows);
   const impressions = rows.reduce((sum, row) => sum + Number(row.impressions ?? 0), 0);
   const reach = rows.reduce((sum, row) => sum + Number(row.reach ?? 0), 0);
-  const clicks = rows.reduce((sum, row) => sum + Number(row.link_clicks ?? 0), 0);
+  const clicks = rows.reduce((sum, row) => sum + Number(row.outbound_clicks ?? 0), 0);
+  const landingPageViewTotal = rows.reduce(
+    (sum, row) => sum + Number(row.landing_page_views ?? 0),
+    0
+  );
   const conversions = round(
     rows.reduce((sum, row) => sum + Number(row.leads ?? 0), 0),
     2
@@ -396,6 +448,8 @@ function buildKpis(
     reach,
     impressions,
     clicks,
+    outboundClicks: clicks,
+    landingPageViews: round(landingPageViewTotal, 2),
     ctr: calcCtr(clicks, impressions),
     cpc: calcCpc(spend, clicks),
     conversions,
@@ -417,8 +471,11 @@ const insightFields = [
   "impressions",
   "clicks",
   "inline_link_clicks",
+  "outbound_clicks",
+  "unique_outbound_clicks",
   "ctr",
   "cpc",
+  "cost_per_outbound_click",
   "actions",
   "action_values",
   "cost_per_action_type",

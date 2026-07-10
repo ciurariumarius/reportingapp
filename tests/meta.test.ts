@@ -56,6 +56,7 @@ describe("Meta Ads connector", () => {
     expect(isPrimaryMetaAction("offsite_conversion.custom.123456789", "lead")).toBe(
       true
     );
+    expect(isPrimaryMetaAction("offsite_conversion.custom.CL001", "lead")).toBe(true);
     expect(isPrimaryMetaAction("offsite_conversion.fb_pixel_purchase", "ecommerce")).toBe(
       true
     );
@@ -115,9 +116,15 @@ describe("Meta Ads connector", () => {
                 impressions: "1200",
                 clicks: "80",
                 inline_link_clicks: "40",
+                outbound_clicks: [{ action_type: "outbound_click", value: "30" }],
+                unique_outbound_clicks: [{ action_type: "outbound_click", value: "24" }],
+                cost_per_outbound_click: [
+                  { action_type: "outbound_click", value: "3.33" }
+                ],
                 actions: [
                   { action_type: "purchase", value: "2" },
-                  { action_type: "lead", value: "5" }
+                  { action_type: "lead", value: "5" },
+                  { action_type: "landing_page_view", value: "21" }
                 ],
                 action_values: [{ action_type: "purchase", value: "500" }]
               }
@@ -137,7 +144,14 @@ describe("Meta Ads connector", () => {
                 reach: "900",
                 impressions: "1200",
                 inline_link_clicks: "40",
-                actions: [{ action_type: "purchase", value: "2" }],
+                outbound_clicks: [{ action_type: "outbound_click", value: "30" }],
+                cost_per_outbound_click: [
+                  { action_type: "outbound_click", value: "3.33" }
+                ],
+                actions: [
+                  { action_type: "purchase", value: "2" },
+                  { action_type: "landing_page_view", value: "21" }
+                ],
                 action_values: [{ action_type: "purchase", value: "500" }]
               }
             ]
@@ -170,10 +184,16 @@ describe("Meta Ads connector", () => {
     );
     expect(result.state.status).toBe("ready");
     expect(result.report?.attributionWindow).toBe("1d_click");
+    expect(result.report?.kpis.clicks).toBe(30);
+    expect(result.report?.kpis.outboundClicks).toBe(30);
+    expect(result.report?.kpis.cpc).toBe(3.33);
+    expect(result.report?.kpis.landingPageViews).toBe(21);
     expect(result.report?.kpis.conversions).toBe(2);
     expect(result.report?.kpis.conversionValue).toBe(500);
     expect(result.report?.kpis.roas).toBe(5);
     expect(result.report?.campaigns[0].campaign_name).toBe("Sales");
+    expect(result.report?.campaigns[0].link_clicks).toBe(30);
+    expect(result.report?.campaigns[0].landing_page_views).toBe(21);
     expect(result.report?.actions[0]).toMatchObject({
       action_type: "purchase",
       value: 2,
@@ -209,6 +229,7 @@ describe("Meta Ads connector", () => {
                 inline_link_clicks: "50",
                 actions: [
                   { action_type: "offsite_conversion.custom.123456789", value: "7" },
+                  { action_type: "offsite_conversion.custom.CL001", value: "4" },
                   { action_type: "post_engagement", value: "20" }
                 ]
               }
@@ -229,7 +250,8 @@ describe("Meta Ads connector", () => {
                 impressions: "1200",
                 inline_link_clicks: "50",
                 actions: [
-                  { action_type: "offsite_conversion.custom.123456789", value: "7" }
+                  { action_type: "offsite_conversion.custom.123456789", value: "7" },
+                  { action_type: "offsite_conversion.custom.CL001", value: "4" }
                 ]
               }
             ]
@@ -244,10 +266,12 @@ describe("Meta Ads connector", () => {
               spend: "200",
               actions: [
                 { action_type: "offsite_conversion.custom.123456789", value: "7" },
+                { action_type: "offsite_conversion.custom.CL001", value: "4" },
                 { action_type: "post_engagement", value: "20" }
               ],
               cost_per_action_type: [
-                { action_type: "offsite_conversion.custom.123456789", value: "28.57" }
+                { action_type: "offsite_conversion.custom.123456789", value: "28.57" },
+                { action_type: "offsite_conversion.custom.CL001", value: "50" }
               ]
             }
           ]
@@ -261,14 +285,21 @@ describe("Meta Ads connector", () => {
     });
 
     expect(result.state.status).toBe("ready");
-    expect(result.report?.kpis.conversions).toBe(7);
-    expect(result.report?.kpis.cpa).toBe(28.57);
+    expect(result.report?.kpis.conversions).toBe(11);
+    expect(result.report?.kpis.cpa).toBe(18.18);
     expect(result.report?.actions[0]).toMatchObject({
       action_name: "Programare consultanta",
       action_type: "offsite_conversion.custom.123456789",
       is_primary: 1,
       value: 7,
       cost_per_action: 28.57
+    });
+    expect(result.report?.actions[1]).toMatchObject({
+      action_name: "CL001",
+      action_type: "offsite_conversion.custom.CL001",
+      is_primary: 1,
+      value: 4,
+      cost_per_action: 50
     });
   });
 

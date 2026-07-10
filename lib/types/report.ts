@@ -5,9 +5,11 @@ export type PlatformKpis = {
   impressions?: number;
   reach?: number;
   clicks?: number;
+  outboundClicks?: number;
   ctr?: number;
   cpc?: number;
   conversions?: number;
+  landingPageViews?: number;
   allConversions?: number;
   conversionValue?: number;
   cpa?: number;

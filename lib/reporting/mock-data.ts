@@ -451,6 +451,7 @@ export function metaReport(client: ClientConfig, range: DateRange) {
     const reach = 4_800 + (seed % 2_100);
     const impressions = Math.round(reach * (1.35 + (seed % 18) / 100));
     const linkClicks = 120 + (seed % 75);
+    const landingPageViews = Math.round(linkClicks * 0.72);
     const leads = round(5 + (seed % 8) + index * 0.05, 1);
 
     return {
@@ -459,6 +460,8 @@ export function metaReport(client: ClientConfig, range: DateRange) {
       reach,
       impressions,
       link_clicks: linkClicks,
+      outbound_clicks: linkClicks,
+      landing_page_views: landingPageViews,
       ctr: calcCtr(linkClicks, impressions),
       cpc: calcCpc(spend, linkClicks),
       leads,
@@ -470,6 +473,7 @@ export function metaReport(client: ClientConfig, range: DateRange) {
   const reach = sumRows(daily, "reach");
   const impressions = sumRows(daily, "impressions");
   const clicks = sumRows(daily, "link_clicks");
+  const landingPageViewsTotal = sumRows(daily, "landing_page_views");
   const leads = sumRows(daily, "leads");
 
   const campaigns = [
@@ -480,6 +484,7 @@ export function metaReport(client: ClientConfig, range: DateRange) {
     const ratio = [0.47, 0.31, 0.22][index];
     const campaignSpend = round(spend * ratio);
     const campaignClicks = Math.round(clicks * ratio);
+    const campaignLandingPageViews = Math.round(landingPageViewsTotal * ratio);
     const campaignLeads = round(leads * ratio, 1);
     const campaignImpressions = Math.round(impressions * ratio);
 
@@ -489,6 +494,8 @@ export function metaReport(client: ClientConfig, range: DateRange) {
       reach: Math.round(reach * ratio),
       impressions: campaignImpressions,
       link_clicks: campaignClicks,
+      outbound_clicks: campaignClicks,
+      landing_page_views: campaignLandingPageViews,
       ctr: calcCtr(campaignClicks, campaignImpressions),
       cpc: calcCpc(campaignSpend, campaignClicks),
       leads: campaignLeads,
@@ -504,6 +511,8 @@ export function metaReport(client: ClientConfig, range: DateRange) {
       0.26,
       1
     ],
+    ["offsite_conversion.custom.CL001", "CL001", 0.18, 1],
+    ["landing_page_view", "Landing page view", 1, 0],
     ["link_click", "Link click", 1, 0],
     ["post_engagement", "Post engagement", 3.4, 0]
   ];
@@ -514,12 +523,16 @@ export function metaReport(client: ClientConfig, range: DateRange) {
     value:
       actionType === "link_click"
         ? clicks
+        : actionType === "landing_page_view"
+          ? landingPageViewsTotal
         : actionType === "post_engagement"
           ? Math.round(clicks * Number(ratio))
           : round(leads * Number(ratio), 1),
     cost_per_action:
       actionType === "link_click"
         ? calcCpc(spend, clicks)
+        : actionType === "landing_page_view"
+          ? calcCpa(spend, landingPageViewsTotal)
         : calcCpa(spend, leads * Number(ratio))
   }));
 
@@ -528,6 +541,8 @@ export function metaReport(client: ClientConfig, range: DateRange) {
     reach,
     impressions,
     clicks,
+    outboundClicks: clicks,
+    landingPageViews: round(landingPageViewsTotal, 1),
     ctr: calcCtr(clicks, impressions),
     cpc: calcCpc(spend, clicks),
     conversions: round(leads, 1),
