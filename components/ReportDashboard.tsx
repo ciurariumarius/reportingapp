@@ -92,6 +92,16 @@ const ro = {
   costPerConversionHelp: "Cost mediu pentru o acțiune urmărită.",
   websiteTrafficHelp: "Sesiuni măsurate în GA4 pentru perioada analizată.",
   websiteConversionsHelp: "Acțiuni importante măsurate pe website.",
+  adsChannelBreakdown: "Canale ads detaliat",
+  googleOwnerTitle: "Google Ads pe scurt",
+  googleOwnerSubtitle:
+    "Cost, clickuri și conversii din campaniile Google Ads în perioada selectată.",
+  metaOwnerTitle: "Facebook Ads pe scurt",
+  metaOwnerSubtitle:
+    "Cost, clickuri și acțiuni/conversii din campaniile Facebook Ads în perioada selectată.",
+  channelCampaignsSummary: "Campanii principale",
+  channelConversionsSummary: "Conversii / acțiuni",
+  cpc: "CPC",
   actionsConversionSummary: "Acțiuni / conversii",
   actionsConversionHelp:
     "Platformele și GA4 pot atribui diferit, de aceea le afișăm separat.",
@@ -224,6 +234,16 @@ const en: typeof ro = {
   costPerConversionHelp: "Average cost for one tracked action.",
   websiteTrafficHelp: "Sessions measured in GA4 for the selected period.",
   websiteConversionsHelp: "Important actions measured on the website.",
+  adsChannelBreakdown: "Ads channel breakdown",
+  googleOwnerTitle: "Google Ads at a glance",
+  googleOwnerSubtitle:
+    "Cost, clicks and conversions from Google Ads campaigns in the selected period.",
+  metaOwnerTitle: "Facebook Ads at a glance",
+  metaOwnerSubtitle:
+    "Cost, clicks and actions/conversions from Facebook Ads campaigns in the selected period.",
+  channelCampaignsSummary: "Main campaigns",
+  channelConversionsSummary: "Conversions / actions",
+  cpc: "CPC",
   actionsConversionSummary: "Actions / conversions",
   actionsConversionHelp:
     "Platforms and GA4 can attribute differently, so they are shown separately.",
@@ -510,6 +530,16 @@ export function ReportDashboard({
 
         {report ? <OwnerKpiCards copy={copy} report={report} /> : null}
 
+        {report ? (
+          <OwnerAdsChannelSections
+            copy={copy}
+            currency={currency}
+            isEcommerceReport={isEcommerceReport}
+            metaActionColumns={metaActionColumns}
+            report={report}
+          />
+        ) : null}
+
         {report ? <ChannelComparisonSection copy={copy} report={report} /> : null}
 
         {report ? <OwnerTrendChart copy={copy} report={report} /> : null}
@@ -781,6 +811,183 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
         </div>
       ))}
     </section>
+  );
+}
+
+function OwnerAdsChannelSections({
+  copy,
+  currency,
+  isEcommerceReport,
+  metaActionColumns,
+  report
+}: {
+  copy: typeof ro;
+  currency: string;
+  isEcommerceReport: boolean;
+  metaActionColumns: TableColumn[];
+  report: ReportResponse;
+}) {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold text-slate-950">
+        {copy.adsChannelBreakdown}
+      </h2>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <OwnerAdsChannelCard
+          campaignColumns={[
+            ["campaign_name", "Campanie"],
+            ["cost", copy.cost, "currency"],
+            ["clicks", copy.clicks],
+            ["avg_cpc", copy.cpc, "currency"],
+            ["conversions", copy.conversions]
+          ]}
+          campaigns={report.googleAds?.campaigns ?? []}
+          conversionColumns={[
+            ["conversion_action_name", "Acțiune"],
+            ["conversions", copy.conversions],
+            ["all_conversions", copy.allConversionsShort]
+          ]}
+          conversions={visibleConversionRows(report.googleAds?.conversions ?? [])}
+          copy={copy}
+          currency={currency}
+          kpis={[
+            {
+              label: copy.cost,
+              value: formatCurrency(report.googleAds?.kpis.spend ?? 0, currency)
+            },
+            {
+              label: copy.clicks,
+              value: formatNumber(report.googleAds?.kpis.clicks ?? 0)
+            },
+            {
+              label: copy.cpc,
+              value: formatCurrency(report.googleAds?.kpis.cpc ?? 0, currency)
+            },
+            {
+              label: copy.conversions,
+              value: formatNumber(report.googleAds?.kpis.conversions ?? 0)
+            }
+          ]}
+          subtitle={copy.googleOwnerSubtitle}
+          title={copy.googleOwnerTitle}
+        />
+        <OwnerAdsChannelCard
+          campaignColumns={[
+            ["campaign_name", "Campanie"],
+            ["spend", copy.cost, "currency"],
+            ["link_clicks", copy.clicks],
+            ["cpc", copy.cpc, "currency"],
+            ["leads", copy.conversions],
+            ["cost_per_lead", copy.costPerConversion, "currency"],
+            ...(isEcommerceReport
+              ? [
+                  ["conversion_value", copy.platformConversionValue, "currency"] as TableColumn,
+                  ["roas", "ROAS"] as TableColumn
+                ]
+              : [])
+          ]}
+          campaigns={report.meta?.campaigns ?? []}
+          conversionColumns={metaActionColumns}
+          conversions={ownerMetaConversionRows(report.meta?.actions ?? [])}
+          copy={copy}
+          currency={currency}
+          kpis={[
+            {
+              label: copy.cost,
+              value: formatCurrency(report.meta?.kpis.spend ?? 0, currency)
+            },
+            {
+              label: copy.clicks,
+              value: formatNumber(report.meta?.kpis.clicks ?? 0)
+            },
+            {
+              label: copy.cpc,
+              value: formatCurrency(report.meta?.kpis.cpc ?? 0, currency)
+            },
+            {
+              label: copy.conversions,
+              value: formatNumber(report.meta?.kpis.conversions ?? 0)
+            }
+          ]}
+          subtitle={copy.metaOwnerSubtitle}
+          title={copy.metaOwnerTitle}
+        />
+      </div>
+    </section>
+  );
+}
+
+function OwnerAdsChannelCard({
+  campaignColumns,
+  campaigns,
+  conversionColumns,
+  conversions,
+  copy,
+  currency,
+  kpis,
+  subtitle,
+  title
+}: {
+  campaignColumns: TableColumn[];
+  campaigns: Array<Record<string, string | number>>;
+  conversionColumns: TableColumn[];
+  conversions: Array<Record<string, string | number>>;
+  copy: typeof ro;
+  currency: string;
+  kpis: Array<{ label: string; value: string }>;
+  subtitle: string;
+  title: string;
+}) {
+  return (
+    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+      <div>
+        <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+        <p className="mt-1 text-sm leading-6 text-slate-600">{subtitle}</p>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {kpis.map((item) => (
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3" key={item.label}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {item.label}
+            </p>
+            <p className="mt-2 text-xl font-semibold text-slate-950">{item.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 space-y-4">
+        {conversions.length ? (
+          <DataTable
+            columns={conversionColumns}
+            currency={currency}
+            rows={conversions.slice(0, 5)}
+            title={copy.channelConversionsSummary}
+          />
+        ) : (
+          <OwnerEmptyTable message={copy.empty} title={copy.channelConversionsSummary} />
+        )}
+        {campaigns.length ? (
+          <DataTable
+            columns={campaignColumns}
+            currency={currency}
+            rows={campaigns.slice(0, 5)}
+            title={copy.channelCampaignsSummary}
+          />
+        ) : (
+          <OwnerEmptyTable message={copy.empty} title={copy.channelCampaignsSummary} />
+        )}
+      </div>
+    </article>
+  );
+}
+
+function OwnerEmptyTable({ message, title }: { message: string; title: string }) {
+  return (
+    <div className="rounded-md border border-slate-200">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+        <h3 className="text-sm font-semibold text-slate-950">{title}</h3>
+      </div>
+      <p className="px-4 py-3 text-sm text-slate-500">{message}</p>
+    </div>
   );
 }
 
@@ -1445,6 +1652,15 @@ function visibleConversionRows(rows: Array<Record<string, string | number>>) {
       if (firstConversions > 0 && secondConversions === 0) return -1;
       return secondConversions - firstConversions;
     });
+}
+
+function ownerMetaConversionRows(rows: Array<Record<string, string | number>>) {
+  return rows
+    .filter(
+      (row) =>
+        Number(row.value ?? 0) > 0 && metaActionCategory(row.action_type) === "conversions"
+    )
+    .sort((first, second) => Number(second.value ?? 0) - Number(first.value ?? 0));
 }
 
 function visibleLocationRows(rows: Array<Record<string, string | number>>) {
