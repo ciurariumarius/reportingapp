@@ -430,7 +430,7 @@ export function ReportDashboard({
     ["reach", locale === "en" ? "Reach" : "Acoperire"],
     ["link_clicks", metaLabels.linkClicks],
     ["landing_page_views", copy.landingPageViews],
-    ["cpc", metaLabels.cost, "currency"],
+    ["cpc", metaLabels.cost, "currency2"],
     ["leads", metaLabels.primary],
     ...(isEcommerceReport
       ? [
@@ -843,7 +843,7 @@ function OwnerAdsChannelSections({
             ["campaign_name", "Campanie"],
             ["cost", copy.cost, "currency"],
             ["clicks", copy.clicks],
-            ["avg_cpc", copy.cpc, "currency"],
+            ["avg_cpc", copy.cpc, "currency2"],
             ["conversions", copy.conversions]
           ]}
           campaigns={report.googleAds?.campaigns ?? []}
@@ -866,7 +866,7 @@ function OwnerAdsChannelSections({
             },
             {
               label: copy.cpc,
-              value: formatCurrency(report.googleAds?.kpis.cpc ?? 0, currency)
+              value: formatCurrencyPrecise(report.googleAds?.kpis.cpc ?? 0, currency)
             },
             {
               label: copy.conversions,
@@ -882,7 +882,7 @@ function OwnerAdsChannelSections({
             ["spend", copy.cost, "currency"],
             ["link_clicks", copy.outboundClicks],
             ["landing_page_views", copy.landingPageViews],
-            ["cpc", copy.cpc, "currency"],
+            ["cpc", copy.cpc, "currency2"],
             ["leads", copy.conversions],
             ["cost_per_lead", copy.costPerConversion, "currency"],
             ...(isEcommerceReport
@@ -908,7 +908,7 @@ function OwnerAdsChannelSections({
             },
             {
               label: copy.cpc,
-              value: formatCurrency(report.meta?.kpis.cpc ?? 0, currency)
+              value: formatCurrencyPrecise(report.meta?.kpis.cpc ?? 0, currency)
             },
             {
               label: copy.landingPageViews,
@@ -1576,7 +1576,7 @@ function ChartBlock({
   );
 }
 
-type TableColumn = [string, string, ("currency" | "percent")?];
+type TableColumn = [string, string, ("currency" | "currency2" | "percent")?];
 
 function DataGrid({
   blocks,
@@ -1858,6 +1858,15 @@ function formatCurrency(value: number, currency: string) {
   }).format(value);
 }
 
+function formatCurrencyPrecise(value: number, currency: string) {
+  return new Intl.NumberFormat("ro-RO", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
 function formatFriendlyDate(value: string, locale: "ro" | "en") {
   const date = new Date(`${value}T00:00:00.000Z`);
   const parts = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "ro-RO", {
@@ -2016,7 +2025,7 @@ function insightDotClass(status: TrendStatus) {
 
 function formatCell(
   value: string | number | undefined,
-  kind: "currency" | "percent" | undefined,
+  kind: "currency" | "currency2" | "percent" | undefined,
   currency: string
 ) {
   if (value === undefined || value === null) {
@@ -2026,6 +2035,10 @@ function formatCell(
   if (typeof value === "number") {
     if (kind === "currency") {
       return formatCurrency(value, currency);
+    }
+
+    if (kind === "currency2") {
+      return formatCurrencyPrecise(value, currency);
     }
 
     if (kind === "percent") {
