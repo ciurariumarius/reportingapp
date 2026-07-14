@@ -10,6 +10,7 @@ export type PlatformKpis = {
   cpc?: number;
   conversions?: number;
   landingPageViews?: number;
+  costPerLandingPageView?: number;
   allConversions?: number;
   conversionValue?: number;
   cpa?: number;

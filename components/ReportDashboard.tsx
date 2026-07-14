@@ -90,7 +90,7 @@ const ro = {
   investedBudgetHelp: "Investiție cumulată în Google Ads și Facebook Ads.",
   platformConversionsHelp: "Acțiuni urmărite în platformele de promovare.",
   costPerConversionHelp: "Cost mediu pentru o acțiune urmărită.",
-  websiteTrafficHelp: "Sesiuni măsurate în GA4 pentru perioada analizată.",
+  websiteTrafficHelp: "Sesiuni GA4 din toate sursele pentru perioada analizată.",
   websiteConversionsHelp: "Totalul tuturor evenimentelor marcate ca key events în GA4.",
   adsChannelBreakdown: "Canale ads detaliat",
   googleOwnerTitle: "Google Ads pe scurt",
@@ -105,7 +105,9 @@ const ro = {
   channelConversionsSummary: "Conversii / acțiuni",
   cpc: "CPC",
   outboundClicks: "Clickuri outbound",
+  outboundCpc: "CPC outbound",
   landingPageViews: "Landing page views",
+  costPerLandingPageView: "Cost / LPV",
   actionsConversionSummary: "Acțiuni / conversii",
   actionsConversionHelp:
     "Platformele și GA4 pot atribui diferit, de aceea le afișăm separat.",
@@ -236,7 +238,7 @@ const en: typeof ro = {
   investedBudgetHelp: "Combined investment in Google Ads and Facebook Ads.",
   platformConversionsHelp: "Tracked actions reported by advertising platforms.",
   costPerConversionHelp: "Average cost for one tracked action.",
-  websiteTrafficHelp: "Sessions measured in GA4 for the selected period.",
+  websiteTrafficHelp: "GA4 sessions from all sources for the selected period.",
   websiteConversionsHelp: "Total of all events marked as key events in GA4.",
   adsChannelBreakdown: "Ads channel breakdown",
   googleOwnerTitle: "Google Ads at a glance",
@@ -251,7 +253,9 @@ const en: typeof ro = {
   channelConversionsSummary: "Conversions / actions",
   cpc: "CPC",
   outboundClicks: "Outbound clicks",
+  outboundCpc: "Outbound CPC",
   landingPageViews: "Landing page views",
+  costPerLandingPageView: "Cost / LPV",
   actionsConversionSummary: "Actions / conversions",
   actionsConversionHelp:
     "Platforms and GA4 can attribute differently, so they are shown separately.",
@@ -891,9 +895,9 @@ function OwnerAdsChannelSections({
           campaignColumns={[
             ["campaign_name", "Campanie"],
             ["spend", copy.cost, "currency"],
-            ["link_clicks", copy.outboundClicks],
             ["landing_page_views", copy.landingPageViews],
-            ["cpc", copy.cpc, "currency2"],
+            ["cost_per_landing_page_view", copy.costPerLandingPageView, "currency2"],
+            ["link_clicks", copy.outboundClicks],
             ["leads", copy.conversions],
             ["cost_per_lead", copy.costPerConversion, "currency"],
             ...(isEcommerceReport
@@ -914,20 +918,29 @@ function OwnerAdsChannelSections({
               value: formatCurrency(report.meta?.kpis.spend ?? 0, currency)
             },
             {
-              label: copy.outboundClicks,
-              value: formatNumber(report.meta?.kpis.clicks ?? 0)
-            },
-            {
-              label: copy.cpc,
-              value: formatCurrencyPrecise(report.meta?.kpis.cpc ?? 0, currency)
-            },
-            {
               label: copy.landingPageViews,
               value: formatNumber(report.meta?.kpis.landingPageViews ?? 0)
             },
             {
+              label: copy.costPerLandingPageView,
+              value: formatCurrencyPrecise(
+                report.meta?.kpis.costPerLandingPageView ?? 0,
+                currency
+              )
+            },
+            {
               label: copy.conversions,
               value: formatNumber(report.meta?.kpis.conversions ?? 0)
+            }
+          ]}
+          secondaryMetrics={[
+            {
+              label: copy.outboundClicks,
+              value: formatNumber(report.meta?.kpis.clicks ?? 0)
+            },
+            {
+              label: copy.outboundCpc,
+              value: formatCurrencyPrecise(report.meta?.kpis.cpc ?? 0, currency)
             }
           ]}
           subtitle={copy.metaOwnerSubtitle}
@@ -946,6 +959,7 @@ function OwnerAdsChannelCard({
   copy,
   currency,
   kpis,
+  secondaryMetrics,
   subtitle,
   title
 }: {
@@ -956,6 +970,7 @@ function OwnerAdsChannelCard({
   copy: typeof ro;
   currency: string;
   kpis: Array<{ label: string; value: string }>;
+  secondaryMetrics?: Array<{ label: string; value: string }>;
   subtitle: string;
   title: string;
 }) {
@@ -975,6 +990,18 @@ function OwnerAdsChannelCard({
           </div>
         ))}
       </div>
+      {secondaryMetrics?.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {secondaryMetrics.map((item) => (
+            <span
+              className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+              key={item.label}
+            >
+              {item.label}: {item.value}
+            </span>
+          ))}
+        </div>
+      ) : null}
       <div className="mt-4 space-y-4">
         {conversions.length ? (
           <DataTable
