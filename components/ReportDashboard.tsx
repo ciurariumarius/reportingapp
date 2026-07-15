@@ -782,19 +782,22 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
     value: string;
     description: string;
     trend?: MetricTrend;
-    details?: Array<{ label: string; trend?: MetricTrend }>;
+    trendKind?: TrendValueKind;
+    details?: Array<{ label: string; trend?: MetricTrend; trendKind?: TrendValueKind }>;
   }> = [
     {
       label: copy.totalMediaCost,
       value: formatCurrency(paid.totalSpend, currency),
       description: copy.investedBudgetHelp,
-      trend: comparison?.totalSpend
+      trend: comparison?.totalSpend,
+      trendKind: "currency"
     },
     {
       label: copy.websiteTotalTraffic,
       value: formatNumber(website.sessions),
       description: copy.websiteTrafficHelp,
-      trend: comparison?.websiteSessions
+      trend: comparison?.websiteSessions,
+      trendKind: "number"
     },
     {
       label: copy.actionsConversionSummary,
@@ -805,20 +808,24 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
       details: [
         {
           label: `${copy.platformActionsShort}: ${formatNumber(paid.totalConversions)}`,
-          trend: comparison?.primaryResults
+          trend: comparison?.primaryResults,
+          trendKind: "number"
         },
         {
           label: `${copy.websiteConversionsShort}: ${formatNumber(website.conversions)}`,
-          trend: comparison?.websiteKeyEvents
+          trend: comparison?.websiteKeyEvents,
+          trendKind: "number"
         }
       ],
-      trend: comparison?.primaryResults
+      trend: comparison?.primaryResults,
+      trendKind: "number"
     },
     {
       label: copy.totalCostPerConversion,
       value: formatCurrency(paid.costPerConversion, currency),
       description: copy.costPerConversionHelp,
-      trend: comparison?.costPerResult
+      trend: comparison?.costPerResult,
+      trendKind: "currency"
     }
   ];
 
@@ -831,7 +838,14 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
         >
           <p className="text-sm font-semibold text-slate-600">{item.label}</p>
           <p className="mt-3 text-3xl font-semibold text-slate-950">{item.value}</p>
-          {item.trend ? <TrendBadge copy={copy} trend={item.trend} /> : null}
+          {item.trend ? (
+            <TrendBadge
+              copy={copy}
+              currency={currency}
+              kind={item.trendKind}
+              trend={item.trend}
+            />
+          ) : null}
           {item.details?.length ? (
             <div className="mt-3 flex flex-wrap gap-2">
               {item.details.map((detail) => (
@@ -840,7 +854,15 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
                   key={detail.label}
                 >
                   {detail.label}
-                  {detail.trend ? <TrendBadge compact copy={copy} trend={detail.trend} /> : null}
+                  {detail.trend ? (
+                    <TrendBadge
+                      compact
+                      copy={copy}
+                      currency={currency}
+                      kind={detail.trendKind}
+                      trend={detail.trend}
+                    />
+                  ) : null}
                 </span>
               ))}
             </div>
@@ -900,22 +922,26 @@ function OwnerAdsChannelSections({
             {
               label: copy.cost,
               value: formatCurrency(report.googleAds?.kpis.spend ?? 0, currency),
-              trend: comparison?.googleAds.spend
+              trend: comparison?.googleAds.spend,
+              trendKind: "currency"
             },
             {
               label: copy.clicks,
               value: formatNumber(report.googleAds?.kpis.clicks ?? 0),
-              trend: comparison?.googleAds.traffic
+              trend: comparison?.googleAds.traffic,
+              trendKind: "number"
             },
             {
               label: copy.conversions,
               value: formatNumber(report.googleAds?.kpis.conversions ?? 0),
-              trend: comparison?.googleAds.conversions
+              trend: comparison?.googleAds.conversions,
+              trendKind: "number"
             },
             {
               label: copy.costPerConversion,
               value: formatCurrency(report.googleAds?.kpis.cpa ?? 0, currency),
-              trend: comparison?.googleAds.costPerConversion
+              trend: comparison?.googleAds.costPerConversion,
+              trendKind: "currency"
             }
           ]}
           secondaryMetrics={[
@@ -952,22 +978,26 @@ function OwnerAdsChannelSections({
             {
               label: copy.cost,
               value: formatCurrency(report.meta?.kpis.spend ?? 0, currency),
-              trend: comparison?.meta.spend
+              trend: comparison?.meta.spend,
+              trendKind: "currency"
             },
             {
               label: copy.landingPageViews,
               value: formatNumber(report.meta?.kpis.landingPageViews ?? 0),
-              trend: comparison?.meta.traffic
+              trend: comparison?.meta.traffic,
+              trendKind: "number"
             },
             {
               label: copy.conversions,
               value: formatNumber(report.meta?.kpis.conversions ?? 0),
-              trend: comparison?.meta.conversions
+              trend: comparison?.meta.conversions,
+              trendKind: "number"
             },
             {
               label: copy.costPerConversion,
               value: formatCurrency(report.meta?.kpis.cpa ?? 0, currency),
-              trend: comparison?.meta.costPerConversion
+              trend: comparison?.meta.costPerConversion,
+              trendKind: "currency"
             }
           ]}
           secondaryMetrics={[
@@ -1013,7 +1043,12 @@ function OwnerAdsChannelCard({
   conversions: Array<Record<string, string | number>>;
   copy: typeof ro;
   currency: string;
-  kpis: Array<{ label: string; value: string; trend?: MetricTrend }>;
+  kpis: Array<{
+    label: string;
+    value: string;
+    trend?: MetricTrend;
+    trendKind?: TrendValueKind;
+  }>;
   secondaryMetrics?: Array<{ label: string; value: string }>;
   subtitle: string;
   title: string;
@@ -1033,7 +1068,13 @@ function OwnerAdsChannelCard({
             <p className="mt-2 text-xl font-semibold text-slate-950">{item.value}</p>
             {item.trend ? (
               <div className="mt-2">
-                <TrendBadge compact copy={copy} trend={item.trend} />
+                <TrendBadge
+                  compact
+                  copy={copy}
+                  currency={currency}
+                  kind={item.trendKind}
+                  trend={item.trend}
+                />
               </div>
             ) : null}
           </div>
@@ -1950,21 +1991,30 @@ function metaActionBlocks(
   }));
 }
 
+type TrendValueKind = "number" | "currency";
+
 function TrendBadge({
   compact = false,
   copy,
+  currency,
+  kind = "number",
   trend
 }: {
   compact?: boolean;
   copy: typeof ro;
+  currency: string;
+  kind?: TrendValueKind;
   trend: MetricTrend;
 }) {
   const arrow =
     trend.direction === "up" ? "↑" : trend.direction === "down" ? "↓" : "→";
-  const label =
+  const percentLabel =
     trend.percentChange === null
       ? copy.newBaseline
       : `${arrow} ${formatNumber(Math.abs(trend.percentChange))}%`;
+  const current = formatTrendValue(trend.current, kind, currency);
+  const previous = formatTrendValue(trend.previous, kind, currency);
+  const label = `${percentLabel} · ${current} vs ${previous}`;
 
   return (
     <span
@@ -1975,6 +2025,10 @@ function TrendBadge({
       {label}
     </span>
   );
+}
+
+function formatTrendValue(value: number, kind: TrendValueKind, currency: string) {
+  return kind === "currency" ? formatCurrency(value, currency) : formatNumber(value);
 }
 
 function formatNumber(value: number) {
