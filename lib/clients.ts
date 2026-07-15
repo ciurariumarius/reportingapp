@@ -1,4 +1,5 @@
 import type { Client, MonthlyInsight } from "@prisma/client";
+import { hashPassword } from "./security/passwords";
 import { emptyToNull, type ClientPayload } from "./validation";
 
 export function clientDataFromPayload(payload: ClientPayload) {
@@ -16,6 +17,11 @@ export function clientDataFromPayload(payload: ClientPayload) {
     metaAdAccountId: emptyToNull(payload.metaAdAccountId),
     metaPrimaryConversions: emptyToNull(payload.metaPrimaryConversions),
     googleAdsSheetUrl: emptyToNull(payload.googleAdsSheetUrl),
+    ...(payload.reportPin?.trim()
+      ? { reportPinHash: hashPassword(payload.reportPin.trim()) }
+      : payload.clearReportPin
+        ? { reportPinHash: null }
+        : {}),
     notes: emptyToNull(payload.notes)
   };
 }
@@ -36,6 +42,7 @@ export function publicClient(client: Client & { monthlyInsights?: MonthlyInsight
     metaAdAccountId: client.metaAdAccountId,
     metaPrimaryConversions: client.metaPrimaryConversions,
     googleAdsSheetUrl: client.googleAdsSheetUrl,
+    hasReportPin: Boolean(client.reportPinHash),
     notes: client.notes,
     hasShareToken: Boolean(client.shareTokenHash),
     createdAt: client.createdAt.toISOString(),

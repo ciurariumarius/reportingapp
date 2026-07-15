@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const optionalTrimmed = z.string().trim().optional().nullable();
+const optionalPin = optionalTrimmed.refine(
+  (value) => !value || /^\d{4}$/.test(value),
+  "PIN-ul trebuie sa aiba exact 4 cifre."
+);
+
 export const slugSchema = z
   .string()
   .trim()
@@ -24,6 +30,8 @@ export const clientPayloadSchema = z.object({
   metaAdAccountId: z.string().trim().optional().nullable(),
   metaPrimaryConversions: z.string().trim().optional().nullable(),
   googleAdsSheetUrl: z.string().trim().optional().nullable(),
+  reportPin: optionalPin,
+  clearReportPin: z.boolean().default(false),
   notes: z.string().trim().optional().nullable(),
   insightMonth: z
     .string()
@@ -37,8 +45,6 @@ export const clientPayloadSchema = z.object({
 });
 
 export type ClientPayload = z.infer<typeof clientPayloadSchema>;
-
-const optionalTrimmed = z.string().trim().optional().nullable();
 
 export const adminSettingsPayloadSchema = z.object({
   publicAppUrl: optionalTrimmed.refine(
@@ -54,6 +60,7 @@ export const adminSettingsPayloadSchema = z.object({
   metaAppId: optionalTrimmed,
   metaAppSecret: optionalTrimmed,
   clearMetaAppSecret: z.boolean().default(false),
+  reportDefaultPin: optionalPin,
   ga4ClientEmail: optionalTrimmed,
   ga4PrivateKey: optionalTrimmed
 });

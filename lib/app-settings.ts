@@ -14,6 +14,7 @@ export type ServerSettingKey =
   | "META_API_VERSION"
   | "META_APP_ID"
   | "META_APP_SECRET"
+  | "REPORT_DEFAULT_PIN"
   | "GA4_CLIENT_EMAIL"
   | "GA4_PRIVATE_KEY";
 
@@ -76,6 +77,15 @@ export const settingDefinitions: SettingDefinition[] = [
     group: "meta",
     required: false,
     sensitive: true
+  },
+  {
+    key: "REPORT_DEFAULT_PIN",
+    label: "PIN global rapoarte",
+    description: "PIN implicit pentru accesul la rapoarte cand clientul nu are override.",
+    group: "app",
+    required: true,
+    sensitive: true,
+    defaultValue: "2657"
   },
   {
     key: "GA4_CLIENT_EMAIL",
@@ -258,6 +268,10 @@ export async function saveAdminSettings(payload: AdminSettingsPayload) {
     ["META_APP_ID", payload.metaAppId, false],
     ["GA4_CLIENT_EMAIL", payload.ga4ClientEmail, false]
   ];
+
+  if (payload.reportDefaultPin?.trim()) {
+    values.push(["REPORT_DEFAULT_PIN", payload.reportDefaultPin, true]);
+  }
 
   if (payload.metaAccessToken?.trim()) {
     values.push(["META_ACCESS_TOKEN", payload.metaAccessToken, true]);

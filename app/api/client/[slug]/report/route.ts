@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPreviousEquivalentDateRange, normalizeDateRange } from "@/lib/date-ranges";
 import { buildReport } from "@/lib/reporting/report-service";
+import { canReadReport } from "@/lib/report-access";
 import { prisma } from "@/lib/prisma";
 
 type RouteContext = {
@@ -44,6 +45,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   if (!client) {
     return NextResponse.json({ error: "Clientul nu exista." }, { status: 404 });
+  }
+
+  if (!(await canReadReport(client.slug))) {
+    return NextResponse.json({ error: "PIN necesar pentru accesul la raport." }, { status: 401 });
   }
 
   return NextResponse.json(

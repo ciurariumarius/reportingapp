@@ -22,6 +22,7 @@ model Client {
   metaAdAccountId        String?          @map("meta_ad_account_id")
   metaPrimaryConversions String?          @map("meta_primary_conversions") @db.Text
   googleAdsSheetUrl      String?          @map("google_ads_sheet_url")
+  reportPinHash          String?          @map("report_pin_hash")
   notes                  String?
   shareTokenHash         String?          @map("share_token_hash")
   createdAt              DateTime         @default(now()) @map("created_at")

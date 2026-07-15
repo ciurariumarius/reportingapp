@@ -83,12 +83,12 @@ export const adminCookieOptions = {
   maxAge: ADMIN_MAX_AGE_SECONDS
 };
 
-export function reportCookieOptions(slug: string) {
+export function reportCookieOptions(_slug: string) {
   return {
     httpOnly: true,
     sameSite: "lax" as const,
     secure: secureCookie(),
-    path: `/client/${slug}/report`,
+    path: "/",
     maxAge: REPORT_MAX_AGE_SECONDS
   };
 }

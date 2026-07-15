@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ReportPinGate } from "@/components/ReportPinGate";
 import { ReportDashboard } from "@/components/ReportDashboard";
+import { canReadReport } from "@/lib/report-access";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +37,10 @@ export default async function PublicReportPage({ params }: PageProps) {
 
   if (!client) {
     notFound();
+  }
+
+  if (!(await canReadReport(client.slug))) {
+    return <ReportPinGate clientName={client.name} slug={client.slug} />;
   }
 
   return (

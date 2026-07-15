@@ -59,6 +59,7 @@ export default async function AdminSettingsPage() {
       settings.find((setting) => setting.key === "META_API_VERSION")?.displayValue ||
       "v23.0",
     metaAppId: settingDisplay(settings, "META_APP_ID"),
+    reportDefaultPinConfigured: settingConfigured(settings, "REPORT_DEFAULT_PIN"),
     ga4ClientEmail: settingDisplay(settings, "GA4_CLIENT_EMAIL"),
     metaAccessTokenConfigured: settingConfigured(settings, "META_ACCESS_TOKEN"),
     metaAppSecretConfigured: settingConfigured(settings, "META_APP_SECRET"),

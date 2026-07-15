@@ -19,6 +19,8 @@ export type ClientFormValue = {
   metaAdAccountId: string;
   metaPrimaryConversions: string;
   googleAdsSheetUrl: string;
+  reportPin: string;
+  clearReportPin: boolean;
   notes: string;
 };
 
@@ -26,6 +28,7 @@ type ClientFormProps = {
   mode: "create" | "edit";
   initialValue?: Partial<ClientFormValue> & {
     hasShareToken?: boolean;
+    hasReportPin?: boolean;
     reportUrl?: string;
   };
 };
@@ -72,6 +75,8 @@ function defaultValue(): ClientFormValue {
     metaAdAccountId: "",
     metaPrimaryConversions: "",
     googleAdsSheetUrl: "",
+    reportPin: "",
+    clearReportPin: false,
     notes: ""
   };
 }
@@ -579,6 +584,37 @@ export function ClientForm({ mode, initialValue }: ClientFormProps) {
             </div>
           </div>
           <GoogleAdsScriptModal sheetUrl={value.googleAdsSheetUrl} />
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+        <h2 className="mb-4 text-lg font-semibold text-slate-950">Acces raport</h2>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TextField
+            help={
+              initialValue?.hasReportPin && !value.clearReportPin
+                ? "PIN specific salvat. Completeaza doar daca vrei sa il schimbi."
+                : "Optional. Daca ramane gol, clientul foloseste PIN-ul global din Settings."
+            }
+            label="PIN raport client"
+            onChange={(next) => {
+              update("reportPin", next.replace(/\D/g, "").slice(0, 4));
+              if (next) update("clearReportPin", false);
+            }}
+            placeholder={initialValue?.hasReportPin && !value.clearReportPin ? "****" : "2657"}
+            type="password"
+            value={value.reportPin}
+          />
+          <label className="flex items-center gap-2 self-end pb-3 text-sm text-slate-600">
+            <input
+              checked={value.clearReportPin}
+              className="h-4 w-4 rounded border-slate-300"
+              disabled={Boolean(value.reportPin)}
+              onChange={(event) => update("clearReportPin", event.target.checked)}
+              type="checkbox"
+            />
+            Sterge PIN-ul clientului si foloseste PIN-ul global
+          </label>
         </div>
       </section>
 

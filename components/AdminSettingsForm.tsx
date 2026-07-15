@@ -9,6 +9,7 @@ type AdminSettingsFormProps = {
     publicAppUrl: string;
     metaApiVersion: string;
     metaAppId: string;
+    reportDefaultPinConfigured: boolean;
     ga4ClientEmail: string;
     metaAccessTokenConfigured: boolean;
     metaAppSecretConfigured: boolean;
@@ -52,6 +53,7 @@ export function AdminSettingsForm({ initialValue }: AdminSettingsFormProps) {
   const [metaAccessToken, setMetaAccessToken] = useState("");
   const [metaAppSecret, setMetaAppSecret] = useState("");
   const [clearMetaAppSecret, setClearMetaAppSecret] = useState(false);
+  const [reportDefaultPin, setReportDefaultPin] = useState("");
   const [ga4PrivateKey, setGa4PrivateKey] = useState("");
   const [pending, setPending] = useState(false);
   const [testingMetaToken, setTestingMetaToken] = useState(false);
@@ -122,6 +124,7 @@ export function AdminSettingsForm({ initialValue }: AdminSettingsFormProps) {
         metaAppId,
         metaAppSecret,
         clearMetaAppSecret,
+        reportDefaultPin,
         ga4ClientEmail,
         ga4PrivateKey
       })
@@ -147,6 +150,7 @@ export function AdminSettingsForm({ initialValue }: AdminSettingsFormProps) {
 
     setMetaAccessToken("");
     setMetaAppSecret("");
+    setReportDefaultPin("");
     setGa4PrivateKey("");
     setClearMetaAppSecret(false);
     setNotice("Setarile au fost salvate.");
@@ -185,6 +189,14 @@ export function AdminSettingsForm({ initialValue }: AdminSettingsFormProps) {
           onChange={setMetaAppId}
           placeholder="123456789012345"
           value={metaAppId}
+        />
+        <SecretField
+          configured={initialValue.reportDefaultPinConfigured}
+          help="PIN global pentru rapoarte. Default este 2657 daca nu setezi altul."
+          label="PIN global rapoarte"
+          onChange={(next) => setReportDefaultPin(next.replace(/\D/g, "").slice(0, 4))}
+          placeholder="2657"
+          value={reportDefaultPin}
         />
         <SecretField
           configured={initialValue.metaAccessTokenConfigured}
