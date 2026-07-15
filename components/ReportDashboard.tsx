@@ -36,6 +36,7 @@ import type {
   AutomatedInsight,
   ReportResponse,
   SourceState,
+  MetricTrend,
   TrendStatus
 } from "@/lib/types/report";
 
@@ -60,6 +61,7 @@ const ro = {
   comparisonToggle: "Activează comparația",
   comparisonStart: "Start comparație",
   comparisonEnd: "Final comparație",
+  newBaseline: "nou",
   verdict: "Verdict",
   period: "Perioadă",
   yesterday: "Ieri",
@@ -125,7 +127,7 @@ const ro = {
   ga4Role: "Validare trafic",
   ga4Interpretation: "Arată comportamentul pe site după ce utilizatorii ajung din campanii.",
   mainChartTitle: "Evoluția conversiilor și a traficului",
-  observations: "Ce observăm în această perioadă",
+  observations: "Concluzii comparație",
   optimizeNext: "Ce optimizăm mai departe",
   finalConclusion: "Concluzie",
   detailGoogleTitle: "Detalii Google Ads — campanii, costuri și conversii",
@@ -210,6 +212,7 @@ const en: typeof ro = {
   comparisonToggle: "Enable comparison",
   comparisonStart: "Comparison start",
   comparisonEnd: "Comparison end",
+  newBaseline: "new",
   verdict: "Verdict",
   period: "Period",
   yesterday: "Yesterday",
@@ -275,7 +278,7 @@ const en: typeof ro = {
   ga4Role: "Traffic validation",
   ga4Interpretation: "Shows how users behave after arriving from campaigns.",
   mainChartTitle: "Conversions and traffic trend",
-  observations: "What we observe in this period",
+  observations: "Comparison conclusions",
   optimizeNext: "What we optimize next",
   finalConclusion: "Conclusion",
   detailGoogleTitle: "Google Ads details — campaigns, costs and conversions",
@@ -562,9 +565,7 @@ export function ReportDashboard({
 
         {report ? <OwnerTrendChart copy={copy} report={report} /> : null}
 
-        {report ? <ObservationsSection copy={copy} report={report} /> : null}
-
-        {report ? <OptimizationSection copy={copy} report={report} /> : null}
+        {report?.comparison ? <ObservationsSection copy={copy} report={report} /> : null}
 
         {report ? <ConclusionSection copy={copy} report={report} /> : null}
 
@@ -775,16 +776,25 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
   const currency = report.client.currency;
   const paid = report.ownerOverview.paid;
   const website = report.ownerOverview.website;
-  const items = [
+  const comparison = report.comparison;
+  const items: Array<{
+    label: string;
+    value: string;
+    description: string;
+    trend?: MetricTrend;
+    details?: Array<{ label: string; trend?: MetricTrend }>;
+  }> = [
     {
       label: copy.totalMediaCost,
       value: formatCurrency(paid.totalSpend, currency),
-      description: copy.investedBudgetHelp
+      description: copy.investedBudgetHelp,
+      trend: comparison?.totalSpend
     },
     {
       label: copy.websiteTotalTraffic,
       value: formatNumber(website.sessions),
-      description: copy.websiteTrafficHelp
+      description: copy.websiteTrafficHelp,
+      trend: comparison?.websiteSessions
     },
     {
       label: copy.actionsConversionSummary,
@@ -793,14 +803,22 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
       )}`,
       description: copy.actionsConversionHelp,
       details: [
-        `${copy.platformActionsShort}: ${formatNumber(paid.totalConversions)}`,
-        `${copy.websiteConversionsShort}: ${formatNumber(website.conversions)}`
-      ]
+        {
+          label: `${copy.platformActionsShort}: ${formatNumber(paid.totalConversions)}`,
+          trend: comparison?.primaryResults
+        },
+        {
+          label: `${copy.websiteConversionsShort}: ${formatNumber(website.conversions)}`,
+          trend: comparison?.websiteKeyEvents
+        }
+      ],
+      trend: comparison?.primaryResults
     },
     {
       label: copy.totalCostPerConversion,
       value: formatCurrency(paid.costPerConversion, currency),
-      description: copy.costPerConversionHelp
+      description: copy.costPerConversionHelp,
+      trend: comparison?.costPerResult
     }
   ];
 
@@ -813,14 +831,16 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
         >
           <p className="text-sm font-semibold text-slate-600">{item.label}</p>
           <p className="mt-3 text-3xl font-semibold text-slate-950">{item.value}</p>
-          {"details" in item && item.details?.length ? (
+          {item.trend ? <TrendBadge copy={copy} trend={item.trend} /> : null}
+          {item.details?.length ? (
             <div className="mt-3 flex flex-wrap gap-2">
               {item.details.map((detail) => (
                 <span
-                  className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
-                  key={detail}
+                  className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                  key={detail.label}
                 >
-                  {detail}
+                  {detail.label}
+                  {detail.trend ? <TrendBadge compact copy={copy} trend={detail.trend} /> : null}
                 </span>
               ))}
             </div>
@@ -846,6 +866,7 @@ function OwnerAdsChannelSections({
   report: ReportResponse;
 }) {
   const googleCoverageNotice = googleAdsCoverageNotice(report, copy);
+  const comparison = report.comparison;
 
   return (
     <section className="space-y-4">
@@ -878,19 +899,29 @@ function OwnerAdsChannelSections({
           kpis={[
             {
               label: copy.cost,
-              value: formatCurrency(report.googleAds?.kpis.spend ?? 0, currency)
+              value: formatCurrency(report.googleAds?.kpis.spend ?? 0, currency),
+              trend: comparison?.googleAds.spend
             },
             {
               label: copy.clicks,
-              value: formatNumber(report.googleAds?.kpis.clicks ?? 0)
-            },
-            {
-              label: copy.cpc,
-              value: formatCurrencyPrecise(report.googleAds?.kpis.cpc ?? 0, currency)
+              value: formatNumber(report.googleAds?.kpis.clicks ?? 0),
+              trend: comparison?.googleAds.traffic
             },
             {
               label: copy.conversions,
-              value: formatNumber(report.googleAds?.kpis.conversions ?? 0)
+              value: formatNumber(report.googleAds?.kpis.conversions ?? 0),
+              trend: comparison?.googleAds.conversions
+            },
+            {
+              label: copy.costPerConversion,
+              value: formatCurrency(report.googleAds?.kpis.cpa ?? 0, currency),
+              trend: comparison?.googleAds.costPerConversion
+            }
+          ]}
+          secondaryMetrics={[
+            {
+              label: copy.cpc,
+              value: formatCurrencyPrecise(report.googleAds?.kpis.cpc ?? 0, currency)
             }
           ]}
           subtitle={copy.googleOwnerSubtitle}
@@ -920,12 +951,26 @@ function OwnerAdsChannelSections({
           kpis={[
             {
               label: copy.cost,
-              value: formatCurrency(report.meta?.kpis.spend ?? 0, currency)
+              value: formatCurrency(report.meta?.kpis.spend ?? 0, currency),
+              trend: comparison?.meta.spend
             },
             {
               label: copy.landingPageViews,
-              value: formatNumber(report.meta?.kpis.landingPageViews ?? 0)
+              value: formatNumber(report.meta?.kpis.landingPageViews ?? 0),
+              trend: comparison?.meta.traffic
             },
+            {
+              label: copy.conversions,
+              value: formatNumber(report.meta?.kpis.conversions ?? 0),
+              trend: comparison?.meta.conversions
+            },
+            {
+              label: copy.costPerConversion,
+              value: formatCurrency(report.meta?.kpis.cpa ?? 0, currency),
+              trend: comparison?.meta.costPerConversion
+            }
+          ]}
+          secondaryMetrics={[
             {
               label: copy.costPerLandingPageView,
               value: formatCurrencyPrecise(
@@ -933,12 +978,6 @@ function OwnerAdsChannelSections({
                 currency
               )
             },
-            {
-              label: copy.conversions,
-              value: formatNumber(report.meta?.kpis.conversions ?? 0)
-            }
-          ]}
-          secondaryMetrics={[
             {
               label: copy.outboundClicks,
               value: formatNumber(report.meta?.kpis.clicks ?? 0)
@@ -974,7 +1013,7 @@ function OwnerAdsChannelCard({
   conversions: Array<Record<string, string | number>>;
   copy: typeof ro;
   currency: string;
-  kpis: Array<{ label: string; value: string }>;
+  kpis: Array<{ label: string; value: string; trend?: MetricTrend }>;
   secondaryMetrics?: Array<{ label: string; value: string }>;
   subtitle: string;
   title: string;
@@ -992,6 +1031,11 @@ function OwnerAdsChannelCard({
               {item.label}
             </p>
             <p className="mt-2 text-xl font-semibold text-slate-950">{item.value}</p>
+            {item.trend ? (
+              <div className="mt-2">
+                <TrendBadge compact copy={copy} trend={item.trend} />
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
@@ -1144,9 +1188,10 @@ function ObservationsSection({
   report: ReportResponse;
 }) {
   const observations = [
+    ...(report.automatedInsights?.verdict ? [report.automatedInsights.verdict] : []),
     ...(report.automatedInsights?.improved ?? []),
     ...(report.automatedInsights?.attention ?? [])
-  ].slice(0, 4);
+  ].slice(0, 5);
 
   return (
     <InsightListSection
@@ -1154,23 +1199,6 @@ function ObservationsSection({
       emptyText={copy.empty}
       items={observations}
       title={copy.observations}
-    />
-  );
-}
-
-function OptimizationSection({
-  copy,
-  report
-}: {
-  copy: typeof ro;
-  report: ReportResponse;
-}) {
-  return (
-    <InsightListSection
-      copy={copy}
-      emptyText={copy.empty}
-      items={report.automatedInsights?.nextActions ?? []}
-      title={copy.optimizeNext}
     />
   );
 }
@@ -1920,6 +1948,33 @@ function metaActionBlocks(
       ),
     columns
   }));
+}
+
+function TrendBadge({
+  compact = false,
+  copy,
+  trend
+}: {
+  compact?: boolean;
+  copy: typeof ro;
+  trend: MetricTrend;
+}) {
+  const arrow =
+    trend.direction === "up" ? "↑" : trend.direction === "down" ? "↓" : "→";
+  const label =
+    trend.percentChange === null
+      ? copy.newBaseline
+      : `${arrow} ${formatNumber(Math.abs(trend.percentChange))}%`;
+
+  return (
+    <span
+      className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${
+        compact ? "" : "mt-3"
+      } ${insightStatusClass(trend.status)}`}
+    >
+      {label}
+    </span>
+  );
 }
 
 function formatNumber(value: number) {

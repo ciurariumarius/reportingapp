@@ -160,4 +160,46 @@ describe("automated report insights", () => {
     expect(comparison.roas.percentChange).toBe(100);
     expect(insights.verdict.status).toBe("good");
   });
+
+  it("builds platform-level comparison metrics", () => {
+    const current = report({
+      googleAds: {
+        kpis: { spend: 300, clicks: 150, conversions: 30 },
+        daily: [],
+        campaigns: [],
+        conversions: [],
+        devices: [],
+        locations: []
+      },
+      meta: {
+        kpis: { spend: 200, clicks: 80, landingPageViews: 60, conversions: 10 },
+        daily: [],
+        campaigns: [],
+        actions: []
+      }
+    });
+    const previous = report({
+      googleAds: {
+        kpis: { spend: 200, clicks: 100, conversions: 20 },
+        daily: [],
+        campaigns: [],
+        conversions: [],
+        devices: [],
+        locations: []
+      },
+      meta: {
+        kpis: { spend: 100, clicks: 70, landingPageViews: 30, conversions: 5 },
+        daily: [],
+        campaigns: [],
+        actions: []
+      }
+    });
+
+    const comparison = buildReportComparison(current, previous);
+
+    expect(comparison.googleAds.traffic.percentChange).toBe(50);
+    expect(comparison.googleAds.costPerConversion.current).toBe(10);
+    expect(comparison.meta.traffic.percentChange).toBe(100);
+    expect(comparison.meta.costPerConversion.status).toBe("neutral");
+  });
 });

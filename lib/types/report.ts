@@ -84,6 +84,13 @@ export type MetricTrend = {
   status: TrendStatus;
 };
 
+export type PlatformComparison = {
+  spend: MetricTrend;
+  traffic: MetricTrend;
+  conversions: MetricTrend;
+  costPerConversion: MetricTrend;
+};
+
 export type ReportComparison = {
   totalSpend: MetricTrend;
   totalClicks: MetricTrend;
@@ -94,6 +101,8 @@ export type ReportComparison = {
   websiteSessions: MetricTrend;
   websiteKeyEvents: MetricTrend;
   websiteRevenue: MetricTrend;
+  googleAds: PlatformComparison;
+  meta: PlatformComparison;
 };
 
 export type AutomatedInsight = {

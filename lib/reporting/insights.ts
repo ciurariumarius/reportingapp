@@ -2,6 +2,7 @@ import type {
   AutomatedInsight,
   AutomatedInsights,
   MetricTrend,
+  PlatformComparison,
   ReportComparison,
   ReportResponse,
   ReportType,
@@ -38,6 +39,40 @@ function metricSnapshot(report: ReportResponse) {
     websiteSessions: report.overview.websiteSessions,
     websiteKeyEvents: report.overview.websiteKeyEvents,
     websiteRevenue: report.ga4?.kpis.revenue ?? 0
+  };
+}
+
+function platformSnapshot(
+  report: ReportResponse,
+  platform: "googleAds" | "meta"
+) {
+  const kpis = report[platform]?.kpis;
+  const spend = kpis?.spend ?? 0;
+  const traffic =
+    platform === "meta" ? (kpis?.landingPageViews ?? kpis?.clicks ?? 0) : (kpis?.clicks ?? 0);
+  const conversions = kpis?.conversions ?? 0;
+
+  return {
+    spend,
+    traffic,
+    conversions,
+    costPerConversion: ratio(spend, conversions)
+  };
+}
+
+function buildPlatformComparison(
+  current: ReturnType<typeof platformSnapshot>,
+  previous: ReturnType<typeof platformSnapshot>
+): PlatformComparison {
+  return {
+    spend: calculateMetricTrend(current.spend, previous.spend, "neutral"),
+    traffic: calculateMetricTrend(current.traffic, previous.traffic),
+    conversions: calculateMetricTrend(current.conversions, previous.conversions),
+    costPerConversion: calculateMetricTrend(
+      current.costPerConversion,
+      previous.costPerConversion,
+      "lower"
+    )
   };
 }
 
@@ -81,6 +116,10 @@ export function buildReportComparison(
 ): ReportComparison {
   const currentMetrics = metricSnapshot(current);
   const previousMetrics = metricSnapshot(previous);
+  const currentGoogleAds = platformSnapshot(current, "googleAds");
+  const previousGoogleAds = platformSnapshot(previous, "googleAds");
+  const currentMeta = platformSnapshot(current, "meta");
+  const previousMeta = platformSnapshot(previous, "meta");
 
   return {
     totalSpend: calculateMetricTrend(
@@ -117,12 +156,25 @@ export function buildReportComparison(
     websiteRevenue: calculateMetricTrend(
       currentMetrics.websiteRevenue,
       previousMetrics.websiteRevenue
-    )
+    ),
+    googleAds: buildPlatformComparison(currentGoogleAds, previousGoogleAds),
+    meta: buildPlatformComparison(currentMeta, previousMeta)
   };
 }
 
 function hasHistoricalData(comparison: ReportComparison) {
-  const hasAnyBaseline = Object.values(comparison).some((trend) => trend.previous > 0);
+  const topLevelTrends = [
+    comparison.totalSpend,
+    comparison.totalClicks,
+    comparison.primaryResults,
+    comparison.costPerResult,
+    comparison.platformValue,
+    comparison.roas,
+    comparison.websiteSessions,
+    comparison.websiteKeyEvents,
+    comparison.websiteRevenue
+  ];
+  const hasAnyBaseline = topLevelTrends.some((trend) => trend.previous > 0);
   const hasEnoughVolume =
     comparison.totalSpend.previous >= 100 ||
     comparison.primaryResults.previous >= 3 ||
