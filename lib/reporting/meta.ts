@@ -38,6 +38,7 @@ type MetaInsightRow = {
   ctr?: string;
   cpc?: string;
   cost_per_outbound_click?: MetaActionMetric[];
+  conversions?: MetaActionMetric[];
   actions?: MetaActionMetric[];
   action_values?: MetaActionMetric[];
   cost_per_action_type?: MetaActionMetric[];
@@ -373,6 +374,34 @@ function landingPageViews(actions: MetaActionMetric[] | undefined) {
   );
 }
 
+function primaryConversionMetrics(row: MetaInsightRow) {
+  return row.conversions?.length ? row.conversions : row.actions;
+}
+
+function reportableActionMetrics(row: MetaInsightRow) {
+  const conversionTypes = new Set(
+    (row.conversions ?? [])
+      .map((action) => action.action_type)
+      .filter((actionType): actionType is string => Boolean(actionType))
+  );
+  const hasDetailedCustomConversions = [...conversionTypes].some((actionType) =>
+    isCustomConversionAction(actionType.toLowerCase())
+  );
+
+  const actions = (row.actions ?? []).filter((action) => {
+    const actionType = action.action_type ?? "";
+    const lowerType = actionType.toLowerCase();
+
+    if (conversionTypes.has(actionType)) {
+      return false;
+    }
+
+    return !(hasDetailedCustomConversions && lowerType === "offsite_conversion.fb_pixel_custom");
+  });
+
+  return [...actions, ...(row.conversions ?? [])];
+}
+
 function rowSpend(rows: Array<Record<string, string | number>>) {
   return round(rows.reduce((sum, row) => sum + Number(row.spend ?? 0), 0));
 }
@@ -397,7 +426,7 @@ function mapPerformanceRow(
     actionMetricValue(row.cost_per_outbound_click, ["outbound_click"]) ||
     calcCpc(spend, outboundClicks);
   const conversions = sumPrimaryActions(
-    row.actions,
+    primaryConversionMetrics(row),
     reportType,
     primaryConversionRules,
     customConversionNames
@@ -485,7 +514,7 @@ function buildActionRows(
   const costs = new Map<string, number>();
 
   for (const row of rows) {
-    for (const [actionType, value] of metricByAction(row.actions)) {
+    for (const [actionType, value] of metricByAction(reportableActionMetrics(row))) {
       totals.set(actionType, (totals.get(actionType) ?? 0) + value);
     }
 
@@ -577,6 +606,7 @@ const insightFields = [
   "ctr",
   "cpc",
   "cost_per_outbound_click",
+  "conversions",
   "actions",
   "action_values",
   "cost_per_action_type",
@@ -586,6 +616,7 @@ const insightFields = [
 const campaignFields = ["campaign_id", "campaign_name", insightFields].join(",");
 const actionFields = [
   "spend",
+  "conversions",
   "actions",
   "action_values",
   "cost_per_action_type",

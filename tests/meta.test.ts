@@ -240,9 +240,12 @@ describe("Meta Ads connector", () => {
                 clicks: "80",
                 inline_link_clicks: "50",
                 actions: [
-                  { action_type: "offsite_conversion.custom.123456789", value: "7" },
-                  { action_type: "offsite_conversion.custom.CL001", value: "4" },
+                  { action_type: "offsite_conversion.fb_pixel_custom", value: "11" },
                   { action_type: "post_engagement", value: "20" }
+                ],
+                conversions: [
+                  { action_type: "offsite_conversion.fb_pixel_custom.123456789", value: "7" },
+                  { action_type: "offsite_conversion.fb_pixel_custom.CL001", value: "4" }
                 ]
               }
             ]
@@ -262,8 +265,11 @@ describe("Meta Ads connector", () => {
                 impressions: "1200",
                 inline_link_clicks: "50",
                 actions: [
-                  { action_type: "offsite_conversion.custom.123456789", value: "7" },
-                  { action_type: "offsite_conversion.custom.CL001", value: "4" }
+                  { action_type: "offsite_conversion.fb_pixel_custom", value: "11" }
+                ],
+                conversions: [
+                  { action_type: "offsite_conversion.fb_pixel_custom.123456789", value: "7" },
+                  { action_type: "offsite_conversion.fb_pixel_custom.CL001", value: "4" }
                 ]
               }
             ]
@@ -277,13 +283,15 @@ describe("Meta Ads connector", () => {
             {
               spend: "200",
               actions: [
-                { action_type: "offsite_conversion.custom.123456789", value: "7" },
-                { action_type: "offsite_conversion.custom.CL001", value: "4" },
+                { action_type: "offsite_conversion.fb_pixel_custom", value: "11" },
                 { action_type: "post_engagement", value: "20" }
               ],
+              conversions: [
+                { action_type: "offsite_conversion.fb_pixel_custom.123456789", value: "7" },
+                { action_type: "offsite_conversion.fb_pixel_custom.CL001", value: "4" }
+              ],
               cost_per_action_type: [
-                { action_type: "offsite_conversion.custom.123456789", value: "28.57" },
-                { action_type: "offsite_conversion.custom.CL001", value: "50" }
+                { action_type: "offsite_conversion.fb_pixel_custom", value: "18.18" }
               ]
             }
           ]
@@ -306,7 +314,7 @@ describe("Meta Ads connector", () => {
     expect(result.report?.kpis.cpa).toBe(18.18);
     expect(result.report?.actions[0]).toMatchObject({
       action_name: "Programare consultanta",
-      action_type: "offsite_conversion.custom.123456789",
+      action_type: "offsite_conversion.fb_pixel_custom.123456789",
       is_primary: 1,
       primary_label: "Primary",
       value: 7,
@@ -314,7 +322,7 @@ describe("Meta Ads connector", () => {
     });
     expect(result.report?.actions[1]).toMatchObject({
       action_name: "CL001",
-      action_type: "offsite_conversion.custom.CL001",
+      action_type: "offsite_conversion.fb_pixel_custom.CL001",
       is_primary: 1,
       primary_label: "Primary",
       value: 4,
