@@ -111,8 +111,7 @@ const ro = {
   landingPageViews: "Landing page views",
   costPerLandingPageView: "Cost / LPV",
   actionsConversionSummary: "Acțiuni / conversii",
-  actionsConversionHelp:
-    "Platformele și GA4 pot atribui diferit, de aceea le afișăm separat.",
+  actionsConversionHelp: "Acțiuni urmărite în Google Ads și Facebook Ads.",
   platformActionsShort: "Platforme",
   websiteConversionsShort: "Website",
   channelComparison: "Rolul fiecărui canal",
