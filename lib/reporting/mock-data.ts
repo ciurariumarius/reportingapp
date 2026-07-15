@@ -522,6 +522,7 @@ export function metaReport(client: ClientConfig, range: DateRange) {
     action_name: actionName,
     action_type: actionType,
     is_primary: Number(isPrimary),
+    primary_label: isPrimary ? "Primary" : "Secondary",
     value:
       actionType === "link_click"
         ? clicks

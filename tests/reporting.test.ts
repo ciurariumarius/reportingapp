@@ -13,6 +13,7 @@ const configuredClient = {
   logoUrl: null,
   ga4PropertyId: "properties/123",
   metaAdAccountId: "act_123",
+  metaPrimaryConversions: null,
   googleAdsSheetUrl: "https://docs.google.com/spreadsheets/d/demo/edit"
 };
 

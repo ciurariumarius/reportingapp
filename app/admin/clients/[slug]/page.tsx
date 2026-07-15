@@ -53,6 +53,7 @@ export default async function EditClientPage({ params }: PageProps) {
           logoUrl: client.logoUrl ?? "",
           ga4PropertyId: client.ga4PropertyId ?? "",
           metaAdAccountId: client.metaAdAccountId ?? "",
+          metaPrimaryConversions: client.metaPrimaryConversions ?? "",
           googleAdsSheetUrl: client.googleAdsSheetUrl ?? "",
           notes: client.notes ?? "",
           hasShareToken: Boolean(client.shareTokenHash)

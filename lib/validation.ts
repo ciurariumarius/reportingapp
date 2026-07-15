@@ -22,6 +22,7 @@ export const clientPayloadSchema = z.object({
   logoUrl: z.string().trim().optional().nullable(),
   ga4PropertyId: z.string().trim().optional().nullable(),
   metaAdAccountId: z.string().trim().optional().nullable(),
+  metaPrimaryConversions: z.string().trim().optional().nullable(),
   googleAdsSheetUrl: z.string().trim().optional().nullable(),
   notes: z.string().trim().optional().nullable(),
   insightMonth: z

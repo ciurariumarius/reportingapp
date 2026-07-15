@@ -3,7 +3,8 @@ import {
   fetchMetaGraphPages,
   fetchMetaReport,
   isPrimaryMetaAction,
-  normalizeMetaAdAccountId
+  normalizeMetaAdAccountId,
+  parseMetaPrimaryConversionRules
 } from "@/lib/reporting/meta";
 
 const originalFetch = global.fetch;
@@ -54,9 +55,20 @@ describe("Meta Ads connector", () => {
     ).toBe(true);
     expect(isPrimaryMetaAction("purchase", "lead")).toBe(false);
     expect(isPrimaryMetaAction("offsite_conversion.custom.123456789", "lead")).toBe(
-      true
+      false
     );
-    expect(isPrimaryMetaAction("offsite_conversion.custom.CL001", "lead")).toBe(true);
+    expect(isPrimaryMetaAction("offsite_conversion.custom.CL001", "lead")).toBe(false);
+    expect(
+      isPrimaryMetaAction("offsite_conversion.custom.CL001", "lead", {
+        primaryConversionRules: parseMetaPrimaryConversionRules("CL001")
+      })
+    ).toBe(true);
+    expect(
+      isPrimaryMetaAction("offsite_conversion.custom.123456789", "lead", {
+        actionName: "Programare consultanta",
+        primaryConversionRules: parseMetaPrimaryConversionRules("programare consultanta")
+      })
+    ).toBe(true);
     expect(isPrimaryMetaAction("offsite_conversion.fb_pixel_purchase", "ecommerce")).toBe(
       true
     );
@@ -279,10 +291,15 @@ describe("Meta Ads connector", () => {
       );
     }) as typeof fetch;
 
-    const result = await fetchMetaReport("123", "lead", {
-      startDate: "2026-07-01",
-      endDate: "2026-07-07"
-    });
+    const result = await fetchMetaReport(
+      "123",
+      "lead",
+      {
+        startDate: "2026-07-01",
+        endDate: "2026-07-07"
+      },
+      "Programare consultanta, CL001"
+    );
 
     expect(result.state.status).toBe("ready");
     expect(result.report?.kpis.conversions).toBe(11);
@@ -291,6 +308,7 @@ describe("Meta Ads connector", () => {
       action_name: "Programare consultanta",
       action_type: "offsite_conversion.custom.123456789",
       is_primary: 1,
+      primary_label: "Primary",
       value: 7,
       cost_per_action: 28.57
     });
@@ -298,12 +316,13 @@ describe("Meta Ads connector", () => {
       action_name: "CL001",
       action_type: "offsite_conversion.custom.CL001",
       is_primary: 1,
+      primary_label: "Primary",
       value: 4,
       cost_per_action: 50
     });
   });
 
-  it("keeps generic Meta custom pixel events visible as primary conversions", async () => {
+  it("keeps generic Meta custom pixel events visible but secondary by default", async () => {
     process.env.META_ACCESS_TOKEN = "token";
     process.env.META_API_VERSION = "v23.0";
     global.fetch = vi.fn(async (input: RequestInfo | URL) => {
@@ -375,11 +394,12 @@ describe("Meta Ads connector", () => {
     });
 
     expect(result.state.status).toBe("ready");
-    expect(result.report?.kpis.conversions).toBe(3);
+    expect(result.report?.kpis.conversions).toBe(0);
     expect(result.report?.actions[0]).toMatchObject({
       action_name: "Custom event",
       action_type: "offsite_conversion.fb_pixel_custom",
-      is_primary: 1,
+      is_primary: 0,
+      primary_label: "Secondary",
       value: 3,
       cost_per_action: 26.67
     });

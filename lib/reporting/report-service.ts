@@ -25,6 +25,7 @@ type ClientWithSources = Pick<
   | "logoUrl"
   | "ga4PropertyId"
   | "metaAdAccountId"
+  | "metaPrimaryConversions"
   | "googleAdsSheetUrl"
 >;
 
@@ -62,6 +63,7 @@ function cacheKey(
     comparisonRange?.endDate ?? "",
     client.ga4PropertyId ?? "",
     client.metaAdAccountId ?? "",
+    client.metaPrimaryConversions ?? "",
     client.googleAdsSheetUrl ?? ""
   ].join("|");
 }
@@ -110,7 +112,12 @@ async function buildSinglePeriodReport(client: ClientWithSources, range: DateRan
     safeSource<Ga4Report>("GA4", fetchGa4Report(client.ga4PropertyId, range)),
     safeSource<MetaReport>(
       "Meta Ads",
-      fetchMetaReport(client.metaAdAccountId, reportType, range)
+      fetchMetaReport(
+        client.metaAdAccountId,
+        reportType,
+        range,
+        client.metaPrimaryConversions
+      )
     )
   ]);
 

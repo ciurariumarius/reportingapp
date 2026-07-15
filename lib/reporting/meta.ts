@@ -49,6 +49,11 @@ type MetaCustomConversionRow = {
   name?: string;
 };
 
+type PrimaryMetaActionOptions = {
+  actionName?: string;
+  primaryConversionRules?: string[];
+};
+
 type MetaGraphResponse<T> = {
   data?: T[];
   paging?: {
@@ -219,11 +224,66 @@ function calcRoas(value: number, spend: number) {
   return spend ? round(value / spend) : 0;
 }
 
-export function isPrimaryMetaAction(actionType: string, reportType: ReportType) {
+function normalizeRuleValue(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function parseMetaPrimaryConversionRules(value?: string | null) {
+  const rules = (value ?? "")
+    .split(/[\n,;]+/)
+    .map(normalizeRuleValue)
+    .filter(Boolean);
+
+  return [...new Set(rules)];
+}
+
+function matchesPrimaryConversionRules(
+  actionType: string,
+  actionName: string | undefined,
+  rules: string[]
+) {
+  if (!rules.length) {
+    return false;
+  }
+
+  const customId = customConversionId(actionType);
+  const values = [
+    actionType,
+    actionName ?? "",
+    customId ?? "",
+    actionType
+      .replace(/^offsite_conversion\./, "")
+      .replace(/^onsite_conversion\./, "")
+      .replace(/^fb_pixel_/, "")
+      .replace(/[._]/g, " ")
+  ]
+    .map(normalizeRuleValue)
+    .filter(Boolean);
+
+  return rules.some((rule) =>
+    values.some((value) => value === rule || (rule.length >= 3 && value.includes(rule)))
+  );
+}
+
+export function isPrimaryMetaAction(
+  actionType: string,
+  reportType: ReportType,
+  options: PrimaryMetaActionOptions = {}
+) {
   const type = actionType.toLowerCase();
+  const rules = options.primaryConversionRules ?? [];
+
+  if (matchesPrimaryConversionRules(actionType, options.actionName, rules)) {
+    return true;
+  }
 
   if (isCustomConversionAction(type)) {
-    return true;
+    return false;
   }
 
   if (reportType === "ecommerce") {
@@ -248,11 +308,23 @@ function isCustomConversionAction(actionType: string) {
 
 function sumPrimaryActions(
   actions: MetaActionMetric[] | undefined,
-  reportType: ReportType
+  reportType: ReportType,
+  primaryConversionRules: string[],
+  customConversionNames: Map<string, string>
 ) {
   return round(
     (actions ?? []).reduce((sum, action) => {
-      if (!action.action_type || !isPrimaryMetaAction(action.action_type, reportType)) {
+      if (!action.action_type) {
+        return sum;
+      }
+
+      const actionName = formatActionName(action.action_type, customConversionNames);
+      const isPrimary = isPrimaryMetaAction(action.action_type, reportType, {
+        actionName,
+        primaryConversionRules
+      });
+
+      if (!isPrimary) {
         return sum;
       }
 
@@ -305,7 +377,12 @@ function rowSpend(rows: Array<Record<string, string | number>>) {
   return round(rows.reduce((sum, row) => sum + Number(row.spend ?? 0), 0));
 }
 
-function mapPerformanceRow(row: MetaInsightRow, reportType: ReportType) {
+function mapPerformanceRow(
+  row: MetaInsightRow,
+  reportType: ReportType,
+  primaryConversionRules: string[],
+  customConversionNames: Map<string, string>
+) {
   const spend = round(number(row.spend));
   const impressions = Math.round(number(row.impressions));
   const outboundClicks = Math.round(
@@ -319,10 +396,22 @@ function mapPerformanceRow(row: MetaInsightRow, reportType: ReportType) {
   const costPerOutboundClick =
     actionMetricValue(row.cost_per_outbound_click, ["outbound_click"]) ||
     calcCpc(spend, outboundClicks);
-  const conversions = sumPrimaryActions(row.actions, reportType);
+  const conversions = sumPrimaryActions(
+    row.actions,
+    reportType,
+    primaryConversionRules,
+    customConversionNames
+  );
   const lpViews = landingPageViews(row.actions);
   const conversionValue =
-    reportType === "ecommerce" ? sumPrimaryActions(row.action_values, "ecommerce") : 0;
+    reportType === "ecommerce"
+      ? sumPrimaryActions(
+          row.action_values,
+          "ecommerce",
+          primaryConversionRules,
+          customConversionNames
+        )
+      : 0;
 
   return {
     ...(row.date_start ? { date: row.date_start } : {}),
@@ -388,7 +477,8 @@ function buildActionRows(
   rows: MetaInsightRow[],
   totalSpend: number,
   reportType: ReportType,
-  customConversionNames: Map<string, string>
+  customConversionNames: Map<string, string>,
+  primaryConversionRules: string[]
 ) {
   const totals = new Map<string, number>();
   const values = new Map<string, number>();
@@ -409,14 +499,23 @@ function buildActionRows(
   }
 
   return [...totals.entries()]
-    .map(([actionType, value]) => ({
-      action_name: formatActionName(actionType, customConversionNames),
-      action_type: actionType,
-      value: round(value, 2),
-      is_primary: isPrimaryMetaAction(actionType, reportType) ? 1 : 0,
-      action_value: round(values.get(actionType) ?? 0),
-      cost_per_action: round(costs.get(actionType) ?? calcCpa(totalSpend, value))
-    }))
+    .map(([actionType, value]) => {
+      const actionName = formatActionName(actionType, customConversionNames);
+      const isPrimary = isPrimaryMetaAction(actionType, reportType, {
+        actionName,
+        primaryConversionRules
+      });
+
+      return {
+        action_name: actionName,
+        action_type: actionType,
+        value: round(value, 2),
+        is_primary: isPrimary ? 1 : 0,
+        primary_label: isPrimary ? "Primary" : "Secondary",
+        action_value: round(values.get(actionType) ?? 0),
+        cost_per_action: round(costs.get(actionType) ?? calcCpa(totalSpend, value))
+      };
+    })
     .sort((first, second) => {
       const primaryDelta = Number(second.is_primary) - Number(first.is_primary);
       return primaryDelta || Number(second.value) - Number(first.value);
@@ -517,7 +616,8 @@ async function fetchCustomConversionNames(adAccountId: string, config: MetaConfi
 export async function fetchMetaReport(
   metaAdAccountId: string | null,
   reportType: ReportType,
-  range: DateRange
+  range: DateRange,
+  metaPrimaryConversions?: string | null
 ): Promise<MetaResult> {
   const adAccountId = normalizeMetaAdAccountId(metaAdAccountId);
   if (!adAccountId) {
@@ -534,6 +634,7 @@ export async function fetchMetaReport(
     action_attribution_windows: metaAttributionWindow,
     limit: 500
   };
+  const primaryConversionRules = parseMetaPrimaryConversionRules(metaPrimaryConversions);
 
   try {
     const [dailyRows, campaignRows, actionRows, customConversionNames] =
@@ -572,8 +673,12 @@ export async function fetchMetaReport(
       return { state: emptyState };
     }
 
-    const daily = dailyRows.map((row) => mapPerformanceRow(row, reportType));
-    const campaigns = campaignRows.map((row) => mapPerformanceRow(row, reportType));
+    const daily = dailyRows.map((row) =>
+      mapPerformanceRow(row, reportType, primaryConversionRules, customConversionNames)
+    );
+    const campaigns = campaignRows.map((row) =>
+      mapPerformanceRow(row, reportType, primaryConversionRules, customConversionNames)
+    );
     const kpiRows = daily.length ? daily : campaigns;
     const totalSpend = rowSpend(kpiRows);
 
@@ -587,7 +692,8 @@ export async function fetchMetaReport(
           actionRows.length ? actionRows : dailyRows,
           totalSpend,
           reportType,
-          customConversionNames
+          customConversionNames,
+          primaryConversionRules
         ),
         attributionWindow: metaAttributionWindow
       }

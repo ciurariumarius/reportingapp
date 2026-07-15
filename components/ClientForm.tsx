@@ -17,6 +17,7 @@ export type ClientFormValue = {
   logoUrl: string;
   ga4PropertyId: string;
   metaAdAccountId: string;
+  metaPrimaryConversions: string;
   googleAdsSheetUrl: string;
   notes: string;
 };
@@ -69,6 +70,7 @@ function defaultValue(): ClientFormValue {
     logoUrl: "",
     ga4PropertyId: "",
     metaAdAccountId: "",
+    metaPrimaryConversions: "",
     googleAdsSheetUrl: "",
     notes: ""
   };
@@ -544,6 +546,15 @@ export function ClientForm({ mode, initialValue }: ClientFormProps) {
             </div>
           </div>
           <div className="lg:col-span-2">
+            <TextAreaField
+              help="Optional: conversiile Meta care intra in KPI-ul principal, separate prin virgula sau rand nou. Ex: CL001, FS002, Programare consultanta. Daca ramane gol, raportul numara doar evenimentele standard Meta relevante."
+              label="Meta conversii principale"
+              onChange={(next) => update("metaPrimaryConversions", next)}
+              placeholder="CL001, FS002"
+              value={value.metaPrimaryConversions}
+            />
+          </div>
+          <div className="lg:col-span-2">
             <div className="flex items-end gap-2">
               <div className="min-w-0 flex-1">
                 <TextField
@@ -639,6 +650,33 @@ function TextField({
         placeholder={placeholder}
         required={required}
         type={type}
+        value={value}
+      />
+      {help ? <span className="mt-1 block text-xs text-slate-500">{help}</span> : null}
+    </label>
+  );
+}
+
+function TextAreaField({
+  help,
+  label,
+  onChange,
+  placeholder,
+  value
+}: {
+  help?: string;
+  label: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  value: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
+      <textarea
+        className="focus-ring min-h-24 w-full rounded-md border border-slate-300 px-3 py-2"
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
         value={value}
       />
       {help ? <span className="mt-1 block text-xs text-slate-500">{help}</span> : null}

@@ -14,6 +14,7 @@ export function clientDataFromPayload(payload: ClientPayload) {
     logoUrl: emptyToNull(payload.logoUrl),
     ga4PropertyId: emptyToNull(payload.ga4PropertyId),
     metaAdAccountId: emptyToNull(payload.metaAdAccountId),
+    metaPrimaryConversions: emptyToNull(payload.metaPrimaryConversions),
     googleAdsSheetUrl: emptyToNull(payload.googleAdsSheetUrl),
     notes: emptyToNull(payload.notes)
   };
@@ -33,6 +34,7 @@ export function publicClient(client: Client & { monthlyInsights?: MonthlyInsight
     logoUrl: client.logoUrl,
     ga4PropertyId: client.ga4PropertyId,
     metaAdAccountId: client.metaAdAccountId,
+    metaPrimaryConversions: client.metaPrimaryConversions,
     googleAdsSheetUrl: client.googleAdsSheetUrl,
     notes: client.notes,
     hasShareToken: Boolean(client.shareTokenHash),

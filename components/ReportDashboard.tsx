@@ -139,6 +139,8 @@ const ro = {
   trafficActions: "Trafic",
   engagementActions: "Interacțiuni",
   conversionActions: "Conversii importante",
+  primaryAction: "Principal",
+  secondaryAction: "Secundar",
   otherActions: "Alte acțiuni",
   allConversionsShort: "toate",
   platformConversions: "Conversii raportate de platforme",
@@ -287,6 +289,8 @@ const en: typeof ro = {
   trafficActions: "Traffic",
   engagementActions: "Engagement",
   conversionActions: "Important conversions",
+  primaryAction: "Primary",
+  secondaryAction: "Secondary",
   otherActions: "Other actions",
   allConversionsShort: "all",
   platformConversions: "Platform-reported conversions",
@@ -449,6 +453,7 @@ export function ReportDashboard({
   ];
   const metaActionColumns: TableColumn[] = [
     ["action_name", locale === "en" ? "Action" : "Acțiune"],
+    ["primary_label", locale === "en" ? "Type" : "Tip"],
     ["value", "Valoare"],
     ...(isEcommerceReport
       ? [["action_value", metaLabels.value, "currency"] as TableColumn]
@@ -909,7 +914,7 @@ function OwnerAdsChannelSections({
           ]}
           campaigns={report.meta?.campaigns ?? []}
           conversionColumns={metaActionColumns}
-          conversions={ownerMetaConversionRows(report.meta?.actions ?? [])}
+          conversions={ownerMetaConversionRows(report.meta?.actions ?? [], copy)}
           copy={copy}
           currency={currency}
           kpis={[
@@ -1707,11 +1712,21 @@ function visibleConversionRows(rows: Array<Record<string, string | number>>) {
     });
 }
 
-function ownerMetaConversionRows(rows: Array<Record<string, string | number>>) {
+function ownerMetaConversionRows(
+  rows: Array<Record<string, string | number>>,
+  copy: typeof ro
+) {
   return rows
     .filter(
       (row) =>
         Number(row.value ?? 0) > 0 && metaActionCategory(row.action_type) === "conversions"
+    )
+    .map(
+      (row): Record<string, string | number> => ({
+        ...row,
+        primary_label:
+          Number(row.is_primary ?? 0) > 0 ? copy.primaryAction : copy.secondaryAction
+      })
     )
     .sort((first, second) => Number(second.value ?? 0) - Number(first.value ?? 0));
 }
@@ -1891,10 +1906,18 @@ function metaActionBlocks(
 
   return categories.map((category) => ({
     title: labels[category],
-    rows: rows.filter(
-      (row) =>
-        Number(row.value ?? 0) > 0 && metaActionCategory(row.action_type) === category
-    ),
+    rows: rows
+      .filter(
+        (row) =>
+          Number(row.value ?? 0) > 0 && metaActionCategory(row.action_type) === category
+      )
+      .map(
+        (row): Record<string, string | number> => ({
+          ...row,
+          primary_label:
+            Number(row.is_primary ?? 0) > 0 ? copy.primaryAction : copy.secondaryAction
+        })
+      ),
     columns
   }));
 }
