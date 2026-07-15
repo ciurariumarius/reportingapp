@@ -801,22 +801,8 @@ function OwnerKpiCards({ copy, report }: { copy: typeof ro; report: ReportRespon
     },
     {
       label: copy.actionsConversionSummary,
-      value: `${formatNumber(paid.totalConversions)} / ${formatNumber(
-        website.conversions
-      )}`,
+      value: formatNumber(paid.totalConversions),
       description: copy.actionsConversionHelp,
-      details: [
-        {
-          label: `${copy.platformActionsShort}: ${formatNumber(paid.totalConversions)}`,
-          trend: comparison?.primaryResults,
-          trendKind: "number"
-        },
-        {
-          label: `${copy.websiteConversionsShort}: ${formatNumber(website.conversions)}`,
-          trend: comparison?.websiteKeyEvents,
-          trendKind: "number"
-        }
-      ],
       trend: comparison?.primaryResults,
       trendKind: "number"
     },
